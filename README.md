@@ -9,7 +9,7 @@
 |  I I I  |
 | I I I I |
 
-2 players take turns to strike out adjacent sticks. Each player must strike out at least one stick in each turn and she can strike as many as she wants as long as they are on the same row.
+2 players take turns to strike out adjacent sticks. Each player must strike out at least one stick in each turn and she can strike as many as she wants as long as they are on the same row. The player who strikes the last stick loses the game.
 
 ## This application
 This project is an Erlang application that hosts a RESTful API through which you can play **Last Stick Loses** either against a machine (also coded in Erlang) or against another user.
