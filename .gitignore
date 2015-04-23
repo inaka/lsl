@@ -1,0 +1,13 @@
+Mnesia*
+ebin
+deps
+doc
+examples/blog/log
+.eunit
+*.o
+*.beam
+*.plt
+.rebar
+log*/
+erl_crash.dump
+.erlang.mk.*

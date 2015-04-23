@@ -1,0 +1,15 @@
+{application, last_stick, [
+  {description, "Last Stick Loses"},
+  {vsn, "0.0.1"},
+  {id, "last_stick"},
+  {registered, []},
+  {applications, [
+    kernel,
+    stdlib,
+    sasl,
+    lager
+  ]},
+  {modules, []},
+  {mod, {last_stick, []}},
+  {env, []}
+ ]}.
