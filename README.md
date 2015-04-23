@@ -2,12 +2,12 @@
 ## Introduction
 **Last Stick Loses** is a pen-and-paper game where a pyramid of sticks is drown as the board
 
-|  Board  |
-|:-------:|
-|    I    |
-|   I I   |
-|  I I I  |
-| I I I I |
+|   Board   |
+|:---------:|
+|`    I    `|
+|`   I I   `|
+|`  I I I  `|
+|` I I I I `|
 
 2 players take turns to strike out adjacent sticks. Each player must strike out at least one stick in each turn and she can strike as many as she wants as long as they are on the same row. The player who strikes the last stick loses the game.
 
