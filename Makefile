@@ -16,9 +16,9 @@ ERLC_OPTS += +warn_bif_clash +warn_unused_record +warn_deprecated_function +warn
 ERLC_OPTS += +warn_export_vars +warn_exported_vars +warn_missing_spec +warn_untyped_record +debug_info
 
 TEST_ERLC_OPTS += +'{parse_transform, lager_transform}'
-CT_OPTS = -cover test/last_stick.coverspec -vvv -erl_args -config ${CONFIG}
+CT_OPTS += -cover test/last_stick.coverspec -vvv -erl_args -config ${CONFIG}
 
-SHELL_OPTS = -name ${PROJECT}@`hostname` -config ${CONFIG} -s lager -s sync
+SHELL_OPTS += -name ${PROJECT}@`hostname` -config ${CONFIG} -s lager -s sync
 
 erldocs:
 	erldocs . -o docs

@@ -2,5 +2,6 @@
 {
  incl_mods,
  [ last_stick
+ , lsl_match
  ]
 }.
