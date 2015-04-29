@@ -5,6 +5,10 @@
 -export([ invalid_board/1
         , valid_board/1
         , play_out_of_bounds/1
+        , play_in_bounds/1
+        , cant_cross_crossed/1
+        , with_just_one_left_won/1
+        , with_no_sticks_left_lost/1
         ]).
 
 -spec all() -> [atom()].
@@ -53,9 +57,9 @@ play_out_of_bounds(_Config) ->
   Match = lsl_match:new(3),
 
   ShouldFail =
-    fun(Row, ColStart, ColEnd, Match) ->
-      try lsl_match:cross(Row, ColStart, ColEnd, Match) of
-        NewMatch -> ct:fail("Unexpected Match: ~p", [Match])
+    fun(Row, ColStart, Length, TheMatch) ->
+      try lsl_match:cross(Row, ColStart, Length, TheMatch) of
+        {_, NewMatch} -> ct:fail("Unexpected Match: ~p", [NewMatch])
       catch
         _:out_of_bounds -> ok
       end
@@ -67,24 +71,109 @@ play_out_of_bounds(_Config) ->
 
   ct:comment("Crossing a row > Rows is invalid"),
   ShouldFail(4, 1, 1, Match),
-  ShouldFail(4, 2, 2, Match),
+  ShouldFail(4, 2, 1, Match),
 
-  ct:comment("Crossing a starting col < 1 is invalid"),
+  ct:comment("Crossing a col < 1 is invalid"),
   ShouldFail(1, 0, 1, Match),
   ShouldFail(2, 0, 0, Match),
 
-  ct:comment("Crossing a starting col > ending col is invalid"),
-  ShouldFail(3, 2, 1, Match),
-  ShouldFail(2, 2, 1, Match),
+  ct:comment("Crossing a length < 1 is invalid"),
+  ShouldFail(3, 2, 0, Match),
+  ShouldFail(2, 2, -1, Match),
 
   ct:comment("Crossing a starting col > row is invalid"),
-  ShouldFail(1, 10, 11, Match),
-  ShouldFail(1, 2, 2, Match),
-  ShouldFail(2, 3, 3, Match),
+  ShouldFail(1, 10, 1, Match),
+  ShouldFail(1, 2, 1, Match),
+  ShouldFail(2, 3, 1, Match),
 
-  ct:comment("Crossing an ending col > row is invalid"),
+  ct:comment("Crossing a length that goes beyond row is invalid"),
   ShouldFail(1, 1, 2, Match),
   ShouldFail(2, 1, 3, Match),
-  ShouldFail(2, 2, 35, Match),
+  ShouldFail(2, 2, 2, Match),
 
+  {comment, ""}.
+
+-spec play_in_bounds(lsl_test_utils:config()) -> {comment, []}.
+play_in_bounds(_Config) ->
+  ct:comment("A new match is created"),
+  Match = lsl_match:new(3),
+  [[i], [i, i], [i, i, i]] = lsl_match:snapshot(Match),
+
+  CrossAndShot =
+    fun(Row, Col, Length, Match) ->
+      {_, NewMatch} = lsl_match:cross(Row, Col, Length, Match),
+      lsl_match:snapshot(NewMatch)
+    end,
+
+  ct:comment("Playing in the first row, crosses its only element"),
+  [[x], [i, i], [i, i, i]] = CrossAndShot(1, 1, 1, Match),
+
+  ct:comment("Playing in the second row, crosses the proper elements"),
+  [[i], [x, i], [i, i, i]] = CrossAndShot(2, 1, 1, Match),
+  [[i], [x, x], [i, i, i]] = CrossAndShot(2, 1, 2, Match),
+  [[i], [i, x], [i, i, i]] = CrossAndShot(2, 2, 1, Match),
+
+  ct:comment("Playing in the third row, crosses the proper elements"),
+  [[i], [i, i], [x, i, i]] = CrossAndShot(3, 1, 1, Match),
+  [[i], [i, i], [i, x, i]] = CrossAndShot(3, 2, 1, Match),
+  [[i], [i, i], [i, i, x]] = CrossAndShot(3, 3, 1, Match),
+  [[i], [i, i], [x, x, i]] = CrossAndShot(3, 1, 2, Match),
+  [[i], [i, i], [i, x, x]] = CrossAndShot(3, 2, 2, Match),
+  [[i], [i, i], [x, x, x]] = CrossAndShot(3, 1, 3, Match),
+
+  {comment, ""}.
+
+-spec cant_cross_crossed(lsl_test_utils:config()) -> {comment, []}.
+cant_cross_crossed(_Config) ->
+  ct:comment("A new match is created and two tiles are crossed in row 5"),
+  EmptyMatch = lsl_match:new(5),
+  {next, Match0} = lsl_match:cross(5, 2, 1, EmptyMatch),
+  {next, Match} = lsl_match:cross(5, 4, 1, Match0),
+
+  ShouldFail =
+    fun(Row, ColStart, Length, TheMatch) ->
+      try lsl_match:cross(Row, ColStart, Length, TheMatch) of
+        {_, NewMatch} -> ct:fail("Unexpected Match: ~p", [NewMatch])
+      catch
+        _:already_crossed -> ok
+      end
+    end,
+
+  ct:comment("Can't just cross a crossed stick"),
+  ShouldFail(5, 2, 1, Match),
+  ShouldFail(5, 4, 1, Match),
+
+  ct:comment("Can't cross to the left of a crossed stick"),
+  ShouldFail(5, 1, 2, Match),
+  ShouldFail(5, 3, 2, Match),
+  ShouldFail(5, 1, 4, Match),
+
+  ct:comment("Can't cross to the right of a crossed stick"),
+  ShouldFail(5, 2, 2, Match),
+  ShouldFail(5, 4, 2, Match),
+  ShouldFail(5, 2, 4, Match),
+
+  ct:comment("Can't cross a line with crossed sticks"),
+  ShouldFail(5, 2, 3, Match),
+  ShouldFail(5, 1, 5, Match),
+
+  {comment, ""}.
+
+-spec with_just_one_left_won(lsl_test_utils:config()) -> {comment, []}.
+with_just_one_left_won(_Config) ->
+  ct:comment("A new match is created"),
+  Match = lsl_match:new(2),
+
+  ct:comment("Player left just one stick and wins"),
+  {won, _} = lsl_match:cross(2, 1, 2, Match),
+  {comment, ""}.
+
+-spec with_no_sticks_left_lost(lsl_test_utils:config()) -> {comment, []}.
+with_no_sticks_left_lost(_Config) ->
+  ct:comment("A new match is created and first player crosses the first row"),
+  EmptyMatch = lsl_match:new(2),
+  {next, Match} = lsl_match:cross(1, 1, 1, EmptyMatch),
+
+  ct:comment("Player crosses the whole second row and loses"),
+  {lost, _} = lsl_match:cross(2, 1, 2, Match),
   {comment, ""}.

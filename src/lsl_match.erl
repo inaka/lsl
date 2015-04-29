@@ -2,21 +2,25 @@
 -module(lsl_match).
 -author('elbrujohalcon@inaka.net').
 
--opaque item_state()  :: clean | crossed.
--opaque row_state()   :: [item_state()].
--opaque board()       :: [row_state()].
--opaque match()       :: #{ board => board()
+-type stick_state() :: clean | crossed.
+-type row_state()   :: [stick_state()].
+-type board()       :: [row_state()].
+-opaque match()     :: #{ board => board()
                           }.
 -export_type([match/0]).
 
--type row() :: pos_integer().
--type col() :: pos_integer().
--export_type([row/0, col/0]).
+-type row()     :: pos_integer().
+-type col()     :: pos_integer().
+-type length()  :: pos_integer().
+-export_type([row/0, col/0, length/0]).
 
--type item_snapshot()  :: i | x.
--type row_snapshot()   :: [item_snapshot()].
+-type stick_snapshot() :: i | x.
+-type row_snapshot()   :: [stick_snapshot()].
 -type board_snapshot() :: [row_snapshot()].
--export_type([ item_snapshot/0, row_snapshot/0, board_snapshot/0]).
+-export_type([stick_snapshot/0, row_snapshot/0, board_snapshot/0]).
+
+-type cross_result() :: next | won | lost.
+-export_type([cross_result/0]).
 
 -export([new/1, rows/1, snapshot/1]).
 -export([cross/4]).
@@ -43,19 +47,40 @@ snapshot(crossed) -> x;
 snapshot(List) -> [snapshot(Elem) || Elem <- List].
 
 %% @doc Crosses a couple of adjacent sticks
--spec cross(row(), col(), col(), match()) -> match().
-cross(Row, ColStart, ColEnd, Match) ->
-  validate_bounds(Row, ColStart, ColEnd, rows(Match)),
-  Match.
+-spec cross(row(), col(), length(), match()) -> {cross_result(), match()}.
+cross(Row, Col, Length, Match) ->
+  validate_bounds(Row, Col, Length, rows(Match)),
+  #{board := Board} = Match,
+  {Up, [OldRow|Down]} = lists:split(Row - 1, Board),
+  {Left, Rest} = lists:split(Col - 1, OldRow),
+  {ToCross, Right} = lists:split(Length, Rest),
+  validate_not_crossed(ToCross),
+  Middle = lists:duplicate(Length, crossed),
+  NewRow = Left ++ Middle ++ Right,
+  NewBoard = Up ++ [NewRow|Down],
+  {cross_result(NewBoard), Match#{board := NewBoard}}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% INTERNAL FUNCTIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-validate_bounds(Row, ColStart, ColEnd, Rows)
+validate_bounds(Row, Col, Length, Rows)
   when Row > 0
      , Row =< Rows
-     , ColStart > 0
-     , ColStart =< ColEnd
-     , ColStart =< Row
-     , ColEnd =< Row -> ok;
+     , Col > 0
+     , Length > 0
+     , Col =< Row
+     , Col + Length - 1 =< Row -> ok;
 validate_bounds(_Row, _ColStart, _ColEnd, _Rows) -> throw(out_of_bounds).
+
+validate_not_crossed(Sticks) ->
+  case lists:member(crossed, Sticks) of
+    true -> throw(already_crossed);
+    false -> ok
+  end.
+
+cross_result(Board) ->
+  case [clean || Row <- Board, clean <- Row] of
+    [] -> lost;
+    [clean] -> won;
+    [clean|_] -> next
+  end.
