@@ -46,7 +46,7 @@ valid_board(_Config) ->
   ct:comment("A match with 5 rows starts with a clean 5-row board"),
   Match2 = lsl_match:new(5),
   5 = lsl_match:rows(Match2),
-  [[i], [i, i], [i, i, i], [i, i, i, i], [i, i, i, i ,i]] =
+  [[i], [i, i], [i, i, i], [i, i, i, i], [i, i, i, i , i]] =
     lsl_match:snapshot(Match2),
 
   {comment, ""}.
