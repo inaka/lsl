@@ -5,8 +5,10 @@
 -type stick_state() :: clean | crossed.
 -type row_state()   :: [stick_state()].
 -type board()       :: [row_state()].
+-type history()     :: [board()].
 -opaque match()     :: #{ board => board()
-                          }.
+                        , history => history()
+                        }.
 -export_type([match/0]).
 
 -type row()     :: pos_integer().
@@ -23,7 +25,7 @@
 -export_type([cross_result/0]).
 
 -export([new/1, rows/1, snapshot/1]).
--export([cross/4]).
+-export([cross/4, undo/1]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% EXPORTED FUNCTIONS
@@ -32,7 +34,7 @@
 -spec new(pos_integer()) -> match().
 new(Rows) when is_integer(Rows), Rows >= 2 ->
   Board = [lists:duplicate(Row, clean) || Row <- lists:seq(1, Rows)],
-  #{board => Board};
+  #{board => Board, history => []};
 new(_Rows) -> throw(invalid_board).
 
 %% @doc Returns the number of rows for the match
@@ -50,7 +52,7 @@ snapshot(List) -> [snapshot(Elem) || Elem <- List].
 -spec cross(row(), col(), length(), match()) -> {cross_result(), match()}.
 cross(Row, Col, Length, Match) ->
   validate_bounds(Row, Col, Length, rows(Match)),
-  #{board := Board} = Match,
+  #{board := Board, history := History} = Match,
   {Up, [OldRow|Down]} = lists:split(Row - 1, Board),
   {Left, Rest} = lists:split(Col - 1, OldRow),
   {ToCross, Right} = lists:split(Length, Rest),
@@ -58,7 +60,16 @@ cross(Row, Col, Length, Match) ->
   Middle = lists:duplicate(Length, crossed),
   NewRow = Left ++ Middle ++ Right,
   NewBoard = Up ++ [NewRow|Down],
-  {cross_result(NewBoard), Match#{board := NewBoard}}.
+  { cross_result(NewBoard)
+  , Match#{board := NewBoard, history := [Board|History]}
+  }.
+
+%% @doc Undoes the last move
+%% @throws no_history if there are no moves to undo
+-spec undo(match()) -> match().
+undo(Match = #{history := [Board|History]}) ->
+  Match#{board := Board, history := History};
+undo(_Match) -> throw(no_history).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% INTERNAL FUNCTIONS

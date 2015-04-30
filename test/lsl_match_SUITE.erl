@@ -9,6 +9,8 @@
         , cant_cross_crossed/1
         , with_just_one_left_won/1
         , with_no_sticks_left_lost/1
+        , no_undo/1
+        , undo/1
         ]).
 
 -spec all() -> [atom()].
@@ -176,4 +178,41 @@ with_no_sticks_left_lost(_Config) ->
 
   ct:comment("Player crosses the whole second row and loses"),
   {lost, _} = lsl_match:cross(2, 1, 2, Match),
+  {comment, ""}.
+
+-spec no_undo(lsl_test_utils:config()) -> {comment, []}.
+no_undo(_Config) ->
+  ct:comment("A new match is created"),
+  Match = lsl_match:new(2),
+
+  ct:comment("No undo is possible"),
+  try lsl_match:undo(Match) of
+    BadMatch -> ct:fail("Unexpected match: ~p", [BadMatch])
+  catch
+    _:no_history -> ok
+  end,
+
+  {comment, ""}.
+
+-spec undo(lsl_test_utils:config()) -> {comment, []}.
+undo(_Config) ->
+  ct:comment("A new match is created and a movement is made"),
+  Match0 = lsl_match:new(3),
+  {next, MatchA} = lsl_match:cross(2, 1, 1, Match0),
+  [[i], [x, i], [i, i, i]] = lsl_match:snapshot(MatchA),
+
+  ct:comment("The move is undone"),
+  Match0 = lsl_match:undo(MatchA),
+
+  ct:comment("2 moves are made"),
+  {next, Match1} = lsl_match:cross(1, 1, 1, Match0),
+  {next, Match2} = lsl_match:cross(2, 2, 1, Match1),
+  [[x], [i, x], [i, i, i]] = lsl_match:snapshot(Match2),
+
+  ct:comment("Last move is undone"),
+  Match1 = lsl_match:undo(Match2),
+
+  ct:comment("First move is undone"),
+  Match0 = lsl_match:undo(Match1),
+
   {comment, ""}.
