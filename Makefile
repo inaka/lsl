@@ -10,6 +10,8 @@ DIALYZER_OPTS := --verbose --statistics -Werror_handling \
 
 include erlang.mk
 
+COMPILE_FIRST += ai/lsl_ai
+
 ERLC_OPTS += +'{parse_transform, lager_transform}'
 ERLC_OPTS += +warn_unused_vars +warn_export_all +warn_shadow_vars +warn_unused_import +warn_unused_function
 ERLC_OPTS += +warn_bif_clash +warn_unused_record +warn_deprecated_function +warn_obsolete_guard +strict_validation
