@@ -11,6 +11,7 @@
         , with_no_sticks_left_lost/1
         , no_undo/1
         , undo/1
+        , pretty_print/1
         ]).
 
 -spec all() -> [atom()].
@@ -214,5 +215,38 @@ undo(_Config) ->
 
   ct:comment("First move is undone"),
   Match0 = lsl_match:undo(Match1),
+
+  {comment, ""}.
+
+-spec pretty_print(lsl_test_utils:config()) -> {comment, []}.
+pretty_print(_Config) ->
+  Print =
+    fun(Match) ->
+      binary:split(
+        iolist_to_binary(lsl_match:print(Match)), <<"\n">>, [global, trim])
+    end,
+
+  ct:comment("A new match with 2 rows should be correctly printed"),
+  [<<" | ">>, <<"| |">>] = Print(lsl_match:new(2)),
+
+  ct:comment("A new match with 3 rows should be correctly printed"),
+  Match0 = lsl_match:new(3),
+  [<<"  |  ">>, <<" | | ">>, <<"| | |">>] = Print(Match0),
+
+  ct:comment("After crossing a stick, it should be crossed"),
+  {next, Match1} = lsl_match:cross(2, 1, 1, Match0),
+  [<<"  |  ">>, <<" + | ">>, <<"| | |">>] = Print(Match1),
+
+  ct:comment("After crossing 2 adjacent sticks, they should be connected"),
+  {next, Match2} = lsl_match:cross(2, 2, 1, Match1),
+  [<<"  |  ">>, <<" +-+ ">>, <<"| | |">>] = Print(Match2),
+
+  ct:comment("After crossing 1 stick out of 3, they should be connected"),
+  {next, Match3} = lsl_match:cross(3, 1, 1, Match2),
+  [<<"  |  ">>, <<" +-+ ">>, <<"+ | |">>] = Print(Match3),
+
+  ct:comment("After crossing 3 adjacent sticks, they should be connected"),
+  {won, Match4} = lsl_match:cross(3, 2, 2, Match3),
+  [<<"  |  ">>, <<" +-+ ">>, <<"+-+-+">>] = Print(Match4),
 
   {comment, ""}.

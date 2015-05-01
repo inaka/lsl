@@ -26,6 +26,7 @@
 
 -export([new/1, rows/1, snapshot/1]).
 -export([cross/4, undo/1]).
+-export([print/1]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% EXPORTED FUNCTIONS
@@ -71,6 +72,12 @@ undo(Match = #{history := [Board|History]}) ->
   Match#{board := Board, history := History};
 undo(_Match) -> throw(no_history).
 
+%% @doc returns a printable version of the board
+-spec print(match()) -> iodata().
+print(#{board := Board}) ->
+  RowWidth = length(Board),
+  [print(Row, RowWidth) || Row <- Board].
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% INTERNAL FUNCTIONS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -95,3 +102,17 @@ cross_result(Board) ->
     [clean] -> won;
     [clean|_] -> next
   end.
+
+print(Row, RowWidth) ->
+  Padding = lists:duplicate(RowWidth - length(Row), $\s),
+  [Padding, do_print(Row, <<>>), Padding, $\n].
+
+do_print([clean], Acc) -> <<Acc/binary, "|">>;
+do_print([crossed], Acc) -> <<Acc/binary, "+">>;
+do_print([crossed, clean], Acc) -> <<Acc/binary, "+ |">>;
+do_print([clean | Sticks], Acc) ->
+  do_print(Sticks, <<Acc/binary, "| ">>);
+do_print([crossed, clean | Sticks], Acc) ->
+  do_print(Sticks, <<Acc/binary, "+ | ">>);
+do_print([crossed, crossed | Sticks], Acc) ->
+  do_print([crossed | Sticks], <<Acc/binary, "+-">>).
