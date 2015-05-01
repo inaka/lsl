@@ -5,7 +5,7 @@
 -type stick_state() :: clean | crossed.
 -type row_state()   :: [stick_state()].
 -type board()       :: [row_state()].
--type history()     :: [board()].
+-type history()     :: [row_state()].
 -opaque match()     :: #{ board => board()
                         , history => history()
                         }.
@@ -62,14 +62,18 @@ cross(Row, Col, Length, Match) ->
   NewRow = Left ++ Middle ++ Right,
   NewBoard = Up ++ [NewRow|Down],
   { cross_result(NewBoard)
-  , Match#{board := NewBoard, history := [Board|History]}
+  , Match#{board := NewBoard, history := [OldRow|History]}
   }.
 
 %% @doc Undoes the last move
 %% @throws no_history if there are no moves to undo
 -spec undo(match()) -> match().
-undo(Match = #{history := [Board|History]}) ->
-  Match#{board := Board, history := History};
+undo(Match = #{history := [Row|History]}) ->
+  #{board := Board} = Match,
+  RowNum = length(Row),
+  {Up, [_|Down]} = lists:split(RowNum - 1, Board),
+  NewBoard = Up ++ [Row|Down],
+  Match#{board := NewBoard, history := History};
 undo(_Match) -> throw(no_history).
 
 %% @doc returns a printable version of the board
