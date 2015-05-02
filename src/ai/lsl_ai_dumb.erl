@@ -20,5 +20,5 @@ next_move(Match) ->
 
 next_move(_, _, []) -> throw(cant_move);
 next_move(R, C, [[i|_] | _]) -> {R, C, 1};
-next_move(R, C, [[x] | Rows]) -> next_move(R+1, 1, Rows);
+next_move(R, _, [[x] | Rows]) -> next_move(R+1, 1, Rows);
 next_move(R, C, [[x|Row] | Rows]) -> next_move(R, C+1, [Row|Rows]).

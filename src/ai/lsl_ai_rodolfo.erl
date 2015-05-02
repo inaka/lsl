@@ -28,13 +28,13 @@ next_move(Match) ->
     % One group, even sticks => turn group into stick
     {Sticks, [Group]} when length(Sticks) rem 2 =:= 0 -> leave_one(Group);
     % One group, odd sticks => remove group
-    {Sticks, [Group]} -> cross(Group);
+    {_Sticks, [Group]} -> cross(Group);
     % Odd groups => cross smallest one
     {_Sticks, [Group|Groups]} when length(Groups) rem 2 =:= 0 -> cross(Group);
     % Even groups, no sticks => reduce largest one
     {[], Groups} -> reduce(hd(lists:reverse(Groups)));
     % Even groups, at least one stick => cross stick
-    {[Stick|_Sticks], Groups} -> cross(Stick)
+    {[Stick|_Sticks], _Groups} -> cross(Stick)
   end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
