@@ -103,8 +103,8 @@ play_in_bounds(_Config) ->
   [[i], [i, i], [i, i, i]] = lsl_match:snapshot(Match),
 
   CrossAndShot =
-    fun(Row, Col, Length, Match) ->
-      {_, NewMatch} = lsl_match:cross(Row, Col, Length, Match),
+    fun(Row, Col, Length, TheMatch) ->
+      {_, NewMatch} = lsl_match:cross(Row, Col, Length, TheMatch),
       lsl_match:snapshot(NewMatch)
     end,
 

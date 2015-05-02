@@ -3,5 +3,8 @@
  incl_mods,
  [ last_stick
  , lsl_match
+ , lsl_ai
+ , lsl_ai_dumb
+ , lsl_ai_rodolfo
  ]
 }.

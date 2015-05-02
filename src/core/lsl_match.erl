@@ -5,7 +5,7 @@
 -type stick_state() :: clean | crossed.
 -type row_state()   :: [stick_state()].
 -type board()       :: [row_state()].
--type history()     :: [board()].
+-type history()     :: [row_state()].
 -opaque match()     :: #{ board => board()
                         , history => history()
                         }.
@@ -17,8 +17,8 @@
 -export_type([row/0, col/0, length/0]).
 
 -type stick_snapshot() :: i | x.
--type row_snapshot()   :: [stick_snapshot()].
--type board_snapshot() :: [row_snapshot()].
+-type row_snapshot()   :: [stick_snapshot(), ...].
+-type board_snapshot() :: [row_snapshot(), ...].
 -export_type([stick_snapshot/0, row_snapshot/0, board_snapshot/0]).
 
 -type cross_result() :: next | won | lost.
@@ -44,10 +44,7 @@ rows(#{board := Board}) -> length(Board).
 
 %% @doc Returns a snapshot of a match
 -spec snapshot(match()) -> board_snapshot().
-snapshot(#{board := Board}) -> snapshot(Board);
-snapshot(clean) -> i;
-snapshot(crossed) -> x;
-snapshot(List) -> [snapshot(Elem) || Elem <- List].
+snapshot(#{board := Board}) -> do_snapshot(Board).
 
 %% @doc Crosses a couple of adjacent sticks
 -spec cross(row(), col(), length(), match()) -> {cross_result(), match()}.
@@ -62,14 +59,18 @@ cross(Row, Col, Length, Match) ->
   NewRow = Left ++ Middle ++ Right,
   NewBoard = Up ++ [NewRow|Down],
   { cross_result(NewBoard)
-  , Match#{board := NewBoard, history := [Board|History]}
+  , Match#{board := NewBoard, history := [OldRow|History]}
   }.
 
 %% @doc Undoes the last move
 %% @throws no_history if there are no moves to undo
 -spec undo(match()) -> match().
-undo(Match = #{history := [Board|History]}) ->
-  Match#{board := Board, history := History};
+undo(Match = #{history := [Row|History]}) ->
+  #{board := Board} = Match,
+  RowNum = length(Row),
+  {Up, [_|Down]} = lists:split(RowNum - 1, Board),
+  NewBoard = Up ++ [Row|Down],
+  Match#{board := NewBoard, history := History};
 undo(_Match) -> throw(no_history).
 
 %% @doc returns a printable version of the board
@@ -116,3 +117,7 @@ do_print([crossed, clean | Sticks], Acc) ->
   do_print(Sticks, <<Acc/binary, "+ | ">>);
 do_print([crossed, crossed | Sticks], Acc) ->
   do_print([crossed | Sticks], <<Acc/binary, "+-">>).
+
+do_snapshot(clean) -> i;
+do_snapshot(crossed) -> x;
+do_snapshot(List) -> [do_snapshot(Elem) || Elem <- List].
