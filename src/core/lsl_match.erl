@@ -17,8 +17,8 @@
 -export_type([row/0, col/0, length/0]).
 
 -type stick_snapshot() :: i | x.
--type row_snapshot()   :: [stick_snapshot(),...].
--type board_snapshot() :: [row_snapshot(),...].
+-type row_snapshot()   :: [stick_snapshot(), ...].
+-type board_snapshot() :: [row_snapshot(), ...].
 -export_type([stick_snapshot/0, row_snapshot/0, board_snapshot/0]).
 
 -type cross_result() :: next | won | lost.
