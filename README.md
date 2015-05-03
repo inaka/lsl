@@ -17,4 +17,7 @@ _P2 lost the game_
 This project is an Erlang application that hosts a RESTful API through which you can play **Last Stick Loses** either against a machine (also coded in Erlang) or against another user.
 
 ## Additional Goals
-This project will also be used as an excercise for those candidates who want to work at [Inaka](inaka.net)
+This project will also be used as an excercise for those candidates who want to work at [Inaka](http://inaka.net)
+
+## RESTful API
+Check the documentation of the system's [RESTful API](RESTful-API.md) in its own file.
