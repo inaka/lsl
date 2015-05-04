@@ -1,6 +1,9 @@
 -module(lsl_app_SUITE).
 -author('elbrujohalcon@inaka.net').
 
+-ignore_xref([all/0, init_per_testcase/2]).
+-ignore_xref([app_starts/1, app_stops/1]).
+
 -export([all/0, init_per_testcase/2]).
 -export([app_starts/1, app_stops/1]).
 

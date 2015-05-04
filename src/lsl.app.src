@@ -7,9 +7,11 @@
     kernel,
     stdlib,
     sasl,
-    lager
+    lager,
+    cowboy
   ]},
   {modules, []},
   {mod, {lsl, []}},
-  {env, []}
+  {env, []},
+  {start_phases, [{start_cowboy_listeners, []}]}
  ]}.

@@ -2,10 +2,12 @@ PROJECT = lsl
 
 CONFIG ?= test/test.config
 
-DEPS = eper lager mixer
+DEPS = eper mixer lager cowboy jiffy
 SELL_DEPS = sync
 TEST_DEPS = xref_runner shotgun
 
+dep_cowboy = git git://github.com/extend/cowboy.git 1.0.1
+dep_jiffy = git git://github.com/davisp/jiffy.git 0.13.3
 dep_eper = git git://github.com/massemanet/eper.git 0.90.0
 dep_mixer = git git://github.com/inaka/mixer.git 0.1.2
 dep_sync = git git://github.com/inaka/sync.git 0.1
