@@ -1,7 +1,7 @@
-{application, last_stick, [
+{application, lsl, [
   {description, "Last Stick Loses"},
   {vsn, "0.0.1"},
-  {id, "last_stick"},
+  {id, "last-stick-loses"},
   {registered, []},
   {applications, [
     kernel,
@@ -10,6 +10,6 @@
     lager
   ]},
   {modules, []},
-  {mod, {last_stick, []}},
+  {mod, {lsl, []}},
   {env, []}
  ]}.

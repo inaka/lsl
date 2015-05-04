@@ -1,4 +1,4 @@
--module(last_stick).
+-module(lsl).
 -author('elbrujohalcon@inaka.net').
 
 -behaviour(application).
