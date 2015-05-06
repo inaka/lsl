@@ -9,6 +9,8 @@
         , end_per_suite/1
         ]).
 -export([ api_call/2
+        , api_call/3
+        , api_call/4
         ]).
 -export([full_match/2]).
 
