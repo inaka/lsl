@@ -8,10 +8,12 @@
     stdlib,
     sasl,
     lager,
-    cowboy
+    cowboy,
+    sumo_db,
+    erlpass
   ]},
   {modules, []},
   {mod, {lsl, []}},
   {env, []},
-  {start_phases, [{start_cowboy_listeners, []}]}
+  {start_phases, [{create_schema, []}, {start_cowboy_listeners, []}]}
  ]}.

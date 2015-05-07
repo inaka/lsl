@@ -6,5 +6,12 @@
  , lsl_ai
  , lsl_ai_dumb
  , lsl_ai_rodolfo
+ , lsl_base_handler
+ , lsl_status_handler
+ , lsl_players_handler
+ , lsl_players
+ , lsl_players_repo
+ , lsl_json
+ , lsl_web_utils
  ]
 }.
