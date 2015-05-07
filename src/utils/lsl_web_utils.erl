@@ -15,16 +15,14 @@ announce_req(Req, Suffix) ->
     {halt, cowboy_req:req(), term()}.
 handle_exception({missing_field, Field}, Req, State) ->
   Response = lsl_json:encode(#{error => <<"missing field: ", Field/binary>>}),
-  {ok, Req1} = cowboy_req:reply(400, Response, Req),
+  {ok, Req1} = cowboy_req:reply(400, [], Response, Req),
   {halt, Req1, State};
-handle_exception(bad_type, Req, State) ->
-  {ok, Req1} = cowboy_req:reply(400, Req),
-  {halt, Req1, State};
-handle_exception(badarg, Req, State) ->
-  {ok, Req1} = cowboy_req:reply(400, Req),
+handle_exception(conflict, Req, State) ->
+  {ok, Req1} = cowboy_req:reply(409, Req),
   {halt, Req1, State};
 handle_exception(bad_json, Req, State) ->
-  {ok, Req1} = cowboy_req:reply(400, Req),
+  Response = lsl_json:encode(#{error => <<"invalid json">>}),
+  {ok, Req1} = cowboy_req:reply(400, [], Response, Req),
   {halt, Req1, State};
 handle_exception(not_found, Req, State) ->
   {ok, Req1} = cowboy_req:reply(404, Req),

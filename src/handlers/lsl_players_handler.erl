@@ -2,6 +2,7 @@
 -module(lsl_players_handler).
 -author('elbrujohalcon@inaka.net').
 
+-include_lib("mixer/include/mixer.hrl").
 -mixin([
         {lsl_base_handler,
          [ init/3
@@ -31,8 +32,9 @@ handle_post(Req, State) ->
     {ok, Body, Req1} = cowboy_req:body(Req),
     {Name, Password} = parse_body(Body),
     Player = #{id := PlayerId} = lsl:register_player(Name, Password),
-    RespBody = lsl_players:to_json(Player),
-    {{true, <<"/players/", PlayerId/binary>>}, Req1, State}
+    RespBody = lsl_json:encode(lsl_players:to_json(Player)),
+    Req2 = cowboy_req:set_resp_body(RespBody, Req1),
+    {{true, <<"/players/", PlayerId/binary>>}, Req2, State}
   catch
     _:Exception ->
       lsl_web_utils:handle_exception(Exception, Req, State)

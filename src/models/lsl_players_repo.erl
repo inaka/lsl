@@ -8,6 +8,11 @@
 %% @doc Creates a new player
 -spec register(binary(), binary()) -> lsl_players:player().
 register(Name, Password) ->
-  Cypher = erlpass:hash(Password),
-  Player = lsl_players:new(Name, Cypher),
-  sumo:persist(lsl_players, Player).
+  case sumo:find_by(lsl_players, [{name, Name}]) of
+    [] ->
+      Cypher = erlpass:hash(Password),
+      Player = lsl_players:new(Name, Cypher),
+      sumo:persist(lsl_players, Player);
+    _Players ->
+      throw(conflict)
+  end.

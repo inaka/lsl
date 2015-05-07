@@ -30,13 +30,13 @@ post_players_wrong(_Config) ->
   ct:comment("POST with empty body fails"),
   #{status_code := 415} = lsl_test_utils:api_call(post, "/players"),
 
+  ct:comment("Something that's not json fails as well"),
+  Headers2 = #{<<"content-type">> => <<"text/plain">>},
+  #{status_code := 415} = lsl_test_utils:api_call(post, "/players", Headers2),
+
   ct:comment("Even with correct type"),
   Headers = #{<<"content-type">> => <<"application/json">>},
   #{status_code := 400} = lsl_test_utils:api_call(post, "/players", Headers),
-
-  ct:comment("Something that's not json fails as well"),
-  Headers2 = #{<<"content-type">> => <<"text/plain">>},
-  #{status_code := 400} = lsl_test_utils:api_call(post, "/players", Headers2),
 
   ct:comment("Broken json fails"),
   #{status_code := 400,
@@ -44,11 +44,17 @@ post_players_wrong(_Config) ->
     lsl_test_utils:api_call(post, "/players", Headers, "{"),
   #{<<"error">> := <<"invalid json">>} = lsl_json:decode(Body0),
 
-  ct:comment("No password fails"),
+  ct:comment("No name fails"),
   #{status_code := 400,
            body := Body2} =
+    lsl_test_utils:api_call(post, "/players", Headers, "{}"),
+  #{<<"error">> := <<"missing field: name">>} = lsl_json:decode(Body2),
+
+  ct:comment("No password fails"),
+  #{status_code := 400,
+           body := Body3} =
     lsl_test_utils:api_call(post, "/players", Headers, "{\"name\":\"joe\"}"),
-  #{<<"error">> := <<"missing field: password">>} = lsl_json:decode(Body2),
+  #{<<"error">> := <<"missing field: password">>} = lsl_json:decode(Body3),
 
   {comment, ""}.
 
@@ -85,7 +91,7 @@ post_players_ok(_Config) ->
   Body =
     lsl_json:encode(
       #{name => <<"test-ok-player">>, password => <<"ap455w0rd">>}),
-  #{status_code := 200,
+  #{status_code := 201,
            body := RespBody} =
     lsl_test_utils:api_call(post, "/players", Headers, Body),
 
@@ -98,7 +104,7 @@ post_players_ok(_Config) ->
   Body2 =
     lsl_json:encode(
       #{name => <<"test-ok-player-2">>, password => <<"ap455w0rd">>}),
-  #{status_code := 200,
+  #{status_code := 201,
            body := RespBody2} =
     lsl_test_utils:api_call(post, "/players", Headers, Body2),
 

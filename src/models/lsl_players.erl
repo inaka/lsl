@@ -6,7 +6,7 @@
 
 -opaque player() ::
   #{
-    id => integer(),
+    id => binary(),
     name => binary(),
     password => binary(),
     created_at => dcn_datetime:datetime(),
@@ -24,9 +24,9 @@
 -spec sumo_schema() -> sumo:schema().
 sumo_schema() ->
   sumo:new_schema(?MODULE,
-    [ sumo:new_field(id,          integer,  [id, not_null])
-    , sumo:new_field(name,        string,   [not_null, index])
-    , sumo:new_field(password,    string,   [not_null])
+    [ sumo:new_field(id,          binary,   [id, not_null])
+    , sumo:new_field(name,        binary,   [not_null, index])
+    , sumo:new_field(password,    binary,   [not_null])
     , sumo:new_field(created_at,  datetime, [not_null])
     , sumo:new_field(updated_at,  datetime, [not_null])
     ]).
