@@ -16,6 +16,7 @@
 
 -export([new/2, to_json/1]).
 -export([sumo_schema/0, sumo_wakeup/1, sumo_sleep/1]).
+-export([id/1, name/1]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEHAVIOUR CALLBACKS
@@ -57,3 +58,14 @@ new(Name, Password) ->
 -spec to_json(player()) -> map().
 to_json(Player) ->
   maps:remove(password, Player).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ACCESSORS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% @doc id
+-spec id(player()) -> binary().
+id(#{id := Id}) -> Id.
+
+%% @doc name
+-spec name(player()) -> binary().
+name(#{name := Name}) -> Name.

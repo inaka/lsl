@@ -21,7 +21,7 @@
 6. If you haven't lost yet, repeat from _4_
 
 #### Voluntarily invalidating a session
-1. Delete the session ([``DELETE /sessions/:session_id``](#delete-sessionssession_id))
+1. Delete the session ([``DELETE /sessions/:session_token``](#delete-sessionssession_token))
 
 #### Delete an Account
 1. Delete the player ([``DELETE /players/:player_id``](#delete-playersplayer_id))
@@ -63,15 +63,15 @@ None
 * **400 Bad Request** with a descriptive message
 * **200 OK** with
 ```json
-{ "id": [SESSION ID]
-, "token": [SESSION TOKEN]
+{ "token": [SESSION TOKEN]
+, "secret": [SESSION SECRET]
 }
 ```
 
-#### ``DELETE /sessions/:session_id``
+#### ``DELETE /sessions/:session_token``
 To invalidate temporary tokens
 ##### Authentication
-Basic Auth with username and password or session id and token
+Basic Auth with username and password or session token and secret
 ##### Parameters
 None
 ##### Responses
@@ -82,7 +82,7 @@ None
 #### ``GET /players``
 To retrieve the list of players
 ##### Authentication
-Basic Auth with session id and token
+Basic Auth with session token and secret
 ##### Parameters
 None
 ##### Responses
@@ -99,7 +99,7 @@ None
 #### ``DELETE /players/:player_id``
 To unregister a player
 ##### Authentication
-Basic Auth with username and password or session id and token
+Basic Auth with username and password or session token and secret
 ##### Parameters
 None
 ##### Responses
@@ -110,7 +110,7 @@ None
 #### ``POST /matches``
 To create matches
 ##### Authentication
-Basic Auth with session id and token
+Basic Auth with session token and secret
 ##### Parameters
 ```json
 { "rival": [PLAYER ID]
@@ -133,7 +133,7 @@ Basic Auth with session id and token
 #### ``GET /matches``
 To retrieve the list of matches for the player
 ##### Authentication
-Basic Auth with session id and token
+Basic Auth with session token and secret
 ##### Parameters
 - **status** (Query String): either `all`, `won`, `lost` or `playing` (**default:** `playing`)
 
@@ -161,7 +161,7 @@ Basic Auth with session id and token
 #### ``GET /matches/:match_id``
 To retrieve a match
 ##### Authentication
-Basic Auth with session id and token
+Basic Auth with session token and secret
 ##### Parameters
 None
 ##### Responses
@@ -181,7 +181,7 @@ None
 #### ``PATCH /matches/:match_id``
 To play
 ##### Authentication
-Basic Auth with session id and token
+Basic Auth with session token and secret
 ##### Parameters
 ```json
 { "row": [ROW NUMBER]
@@ -207,7 +207,7 @@ Basic Auth with session id and token
 #### ``DELETE /matches/:match_id``
 To invalidate temporary tokens
 ##### Authentication
-Basic Auth with session id and token
+Basic Auth with session token and secret
 ##### Parameters
 None
 ##### Responses
@@ -219,7 +219,7 @@ None
 #### ``GET /ai-players``
 To retrieve the list of AI players
 ##### Authentication
-Basic Auth with session id and token
+Basic Auth with session token and secret
 ##### Parameters
 None
 ##### Responses

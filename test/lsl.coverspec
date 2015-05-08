@@ -9,8 +9,11 @@
  , lsl_base_handler
  , lsl_status_handler
  , lsl_players_handler
+ , lsl_sessions_handler
  , lsl_players
  , lsl_players_repo
+ , lsl_sessions
+ , lsl_sessions_repo
  , lsl_json
  , lsl_web_utils
  ]

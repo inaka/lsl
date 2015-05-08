@@ -97,7 +97,8 @@ post_players_ok(_Config) ->
 
   RespMap =
     #{ <<"id">> := Id1
-     , <<"name">> := <<"test-ok-player">>} = lsl_json:decode(RespBody),
+     , <<"name">> := <<"test-ok-player">>
+     } = lsl_json:decode(RespBody),
   false = maps:is_key(<<"password">>, RespMap),
 
   ct:comment("Create another player"),
@@ -109,7 +110,8 @@ post_players_ok(_Config) ->
     lsl_test_utils:api_call(post, "/players", Headers, Body2),
 
   #{ <<"id">> := Id2
-   , <<"name">> := <<"test-ok-player-2">>} = lsl_json:decode(RespBody2),
+   , <<"name">> := <<"test-ok-player-2">>
+   } = lsl_json:decode(RespBody2),
   case Id2 of
     Id1 -> ct:fail("Duplicated id: ~p", [Id2]);
     Id2 -> ok

@@ -46,6 +46,7 @@ start_phase(start_cowboy_listeners, _StartType, []) ->
     [{'_',
       [ {"/status",  lsl_status_handler,  []}
       , {"/players", lsl_players_handler, []}
+      , {"/sessions", lsl_sessions_handler, []}
       ]
      }
     ],
