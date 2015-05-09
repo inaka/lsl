@@ -8,7 +8,7 @@
   #{
     id => binary(),
     name => binary(),
-    password => binary(),
+    password_hash => binary(),
     created_at => dcn_datetime:datetime(),
     updated_at => dcn_datetime:datetime()
   }.
@@ -16,7 +16,7 @@
 
 -export([new/2, to_json/1]).
 -export([sumo_schema/0, sumo_wakeup/1, sumo_sleep/1]).
--export([id/1, name/1]).
+-export([id/1, name/1, password_hash/1]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEHAVIOUR CALLBACKS
@@ -25,11 +25,11 @@
 -spec sumo_schema() -> sumo:schema().
 sumo_schema() ->
   sumo:new_schema(?MODULE,
-    [ sumo:new_field(id,          binary,   [id, not_null])
-    , sumo:new_field(name,        binary,   [not_null, index])
-    , sumo:new_field(password,    binary,   [not_null])
-    , sumo:new_field(created_at,  datetime, [not_null])
-    , sumo:new_field(updated_at,  datetime, [not_null])
+    [ sumo:new_field(id,            binary,   [id, not_null])
+    , sumo:new_field(name,          binary,   [not_null, index])
+    , sumo:new_field(password_hash, binary,   [not_null])
+    , sumo:new_field(created_at,    datetime, [not_null])
+    , sumo:new_field(updated_at,    datetime, [not_null])
     ]).
 
 %% @private
@@ -45,19 +45,19 @@ sumo_wakeup(Doc) -> Doc.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% @doc creates a player
 -spec new(binary(), binary()) -> player().
-new(Name, Password) ->
+new(Name, PasswordHash) ->
   Now = ktn_date:now_human_readable(),
-  #{ id         => undefined
-   , name       => Name
-   , password   => Password
-   , created_at => Now
-   , updated_at => Now
+  #{ id             => undefined
+   , name           => Name
+   , password_hash  => PasswordHash
+   , created_at     => Now
+   , updated_at     => Now
    }.
 
 %% @doc Represents a player as json
 -spec to_json(player()) -> map().
 to_json(Player) ->
-  maps:remove(password, Player).
+  maps:remove(password_hash, Player).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% ACCESSORS
@@ -69,3 +69,7 @@ id(#{id := Id}) -> Id.
 %% @doc name
 -spec name(player()) -> binary().
 name(#{name := Name}) -> Name.
+
+%% @doc password_hash
+-spec password_hash(player()) -> binary().
+password_hash(#{password_hash := PasswordHash}) -> PasswordHash.

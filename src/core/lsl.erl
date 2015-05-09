@@ -11,6 +11,8 @@
         ]).
 
 -export([ register_player/2
+        , fetch_player/2
+        , open_session/1
         ]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -68,3 +70,11 @@ stop([]) -> ok.
 %% @doc Creates a new player
 -spec register_player(binary(), binary()) -> lsl_players:player().
 register_player(Name, Password) -> lsl_players_repo:register(Name, Password).
+
+%% @doc Retrieves a player given its name and password
+-spec fetch_player(binary(), binary()) -> lsl_players:player() | notfound.
+fetch_player(Name, Password) -> lsl_players_repo:fetch(Name, Password).
+
+%% @doc Generates a new session for the player
+-spec open_session(binary()) -> lsl_sessions:session().
+open_session(PlayerId) -> lsl_sessions_repo:open(PlayerId).

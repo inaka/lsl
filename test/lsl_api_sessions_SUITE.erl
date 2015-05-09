@@ -58,20 +58,25 @@ post_sessions_wrong(Config) ->
 
   ct:comment("POST without auth fails"),
   #{status_code := 401,
-        headers := #{<<"www-authenticate">> := <<"Basic realm=\"LSL\"">>}} =
-    lsl_test_utils:api_call(post, "/sessions"),
+        headers := RHeaders0} = lsl_test_utils:api_call(post, "/sessions"),
+  {<<"www-authenticate">>, <<"Basic realm=\"player\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeaders0),
 
   ct:comment("POST with wrong auth fails"),
   Headers0 = #{basic_auth => {"some name", "very bad pwd"}},
   #{status_code := 401,
-        headers := #{<<"www-authenticate">> := <<"Basic realm=\"LSL\"">>}} =
+        headers := RHeaders1} =
     lsl_test_utils:api_call(post, "/sessions", Headers0),
+  {<<"www-authenticate">>, <<"Basic realm=\"player\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeaders1),
 
   ct:comment("POST with wrong password fails"),
   Headers1 = #{basic_auth => {Name, "very bad pwd"}},
   #{status_code := 401,
-        headers := #{<<"www-authenticate">> := <<"Basic realm=\"LSL\"">>}} =
+        headers := RHeaders2} =
     lsl_test_utils:api_call(post, "/sessions", Headers1),
+  {<<"www-authenticate">>, <<"Basic realm=\"player\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeaders2),
 
   {comment, ""}.
 
@@ -79,7 +84,9 @@ post_sessions_wrong(Config) ->
 post_sessions_ok(Config) ->
   {player, Player} = lists:keyfind(player, 1, Config),
   Name = binary_to_list(lsl_players:name(Player)),
-  Headers = #{basic_auth => {Name, "pwd"}},
+  Headers = #{ basic_auth => {Name, "pwd"}
+             , <<"content-type">> => <<"application/json; charset=utf8">>
+             },
 
   ct:comment("Create the session"),
   #{status_code := 201,
