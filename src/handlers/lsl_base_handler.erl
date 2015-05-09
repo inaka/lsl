@@ -11,7 +11,9 @@
         , resource_exists/2
         ]).
 
--type state() :: #{player => undefined | lsl_players:player()}.
+-type state() :: #{ player => undefined | lsl_players:player()
+                  , binding => undefined | binary()
+                  }.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Cowboy Callbacks
@@ -74,6 +76,15 @@ is_authorized([player|Rest], DefaultMech, Req, State) ->
     {undefined, Req1} -> is_authorized(Rest, DefaultMech, Req1, State);
     {{Name, Password}, Req1} ->
       case lsl:fetch_player(Name, Password) of
+        notfound -> is_authorized(Rest, DefaultMech, Req1, State);
+        Player -> {true, Req1, State#{player => Player}}
+      end
+  end;
+is_authorized([session|Rest], DefaultMech, Req, State) ->
+  case credentials(Req) of
+    {undefined, Req1} -> is_authorized(Rest, DefaultMech, Req1, State);
+    {{Token, Secret}, Req1} ->
+      case lsl:fetch_session_player(Token, Secret) of
         notfound -> is_authorized(Rest, DefaultMech, Req1, State);
         Player -> {true, Req1, State#{player => Player}}
       end

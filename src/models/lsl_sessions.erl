@@ -15,7 +15,7 @@
 
 -export([new/2, to_json/1]).
 -export([sumo_schema/0, sumo_wakeup/1, sumo_sleep/1]).
--export([token/1, secret/2]).
+-export([token/1, secret_hash/1, secret/1, secret/2, player_id/1]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEHAVIOUR CALLBACKS
@@ -63,6 +63,18 @@ to_json(Session) ->
 -spec token(session()) -> binary().
 token(#{token := Token}) -> Token.
 
+%% @doc secret_hash
+-spec secret_hash(session()) -> binary().
+secret_hash(#{secret_hash := SecretHash}) -> SecretHash.
+
+%% @doc secret
+-spec secret(session()) -> binary().
+secret(#{secret := Secret}) -> Secret.
+
 %% @doc secret setter
 -spec secret(session(), binary()) -> session().
 secret(Session, Secret) -> Session#{secret := Secret}.
+
+%% @doc player id
+-spec player_id(session()) -> binary().
+player_id(#{player_id := PlayerId}) -> PlayerId.

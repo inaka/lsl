@@ -8,7 +8,7 @@ TEST_DEPS = xref_runner shotgun
 
 dep_erlpass = git https://github.com/ferd/erlpass.git 1.0.1
 dep_katana = git https://github.com/inaka/erlang-katana.git 0.2.5
-dep_sumo = git https://github.com/inaka/sumo_db.git 0.3.6
+dep_sumo = git https://github.com/inaka/sumo_db.git 55334a8
 dep_cowboy = git https://github.com/extend/cowboy.git 1.0.1
 dep_jiffy = git https://github.com/davisp/jiffy.git 0.13.3
 dep_eper = git https://github.com/massemanet/eper.git 0.90.0

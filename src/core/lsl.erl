@@ -13,6 +13,9 @@
 -export([ register_player/2
         , fetch_player/2
         , open_session/1
+        , close_session/1
+        , can_close_session/2
+        , fetch_session_player/2
         ]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -46,9 +49,9 @@ start_phase(start_cowboy_listeners, _StartType, []) ->
 
   Routes =
     [{'_',
-      [ {"/status",  lsl_status_handler,  []}
+      [ {"/status", lsl_status_handler,  []}
       , {"/players", lsl_players_handler, []}
-      , {"/sessions", lsl_sessions_handler, []}
+      , {"/sessions/[:session_token]", lsl_sessions_handler, []}
       ]
      }
     ],
@@ -78,3 +81,25 @@ fetch_player(Name, Password) -> lsl_players_repo:fetch(Name, Password).
 %% @doc Generates a new session for the player
 -spec open_session(binary()) -> lsl_sessions:session().
 open_session(PlayerId) -> lsl_sessions_repo:open(PlayerId).
+
+%% @doc Deletes a session
+-spec close_session(binary()) -> boolean().
+close_session(SessionToken) -> lsl_sessions_repo:close(SessionToken).
+
+%% @doc Is the player allowed to close the session?
+-spec can_close_session(binary(), binary()) -> boolean().
+can_close_session(PlayerId, SessionToken) ->
+  lsl_sessions_repo:can_close(PlayerId, SessionToken).
+
+%% @doc Retrieves a player given the token and secret for the session
+-spec fetch_session_player(binary(), binary()) ->
+  lsl_players:player() | notfound.
+fetch_session_player(Token, Secret) ->
+  case lsl_sessions_repo:fetch(Token, Secret) of
+    notfound -> notfound;
+    Session ->
+      case lsl_players_repo:fetch(lsl_sessions:player_id(Session)) of
+        notfound -> notfound;
+        Player -> Player
+      end
+  end.
