@@ -99,7 +99,7 @@ Basic Auth with session token and secret
 ##### Parameters
 ```json
 { "rival": [PLAYER ID]
-, "rows": [BOARD SIZE]
+, "rows": [BOARD SIZE] /* optional */
 }
 ```
 ##### Responses
@@ -108,8 +108,8 @@ Basic Auth with session token and secret
 * **200 OK** with
 ```json
 { "id": [MATCH ID]
-, "rival": [PLAYER ID]
-, "board": [[true], [false,true], [false,false,false], …] // true means crossed
+, "rival": {"id": [RIVAL ID], "name": [RIVAL NAME]}
+, "board": [[true], [false,true], [false,…], …] /* true means crossed */
 , "current-player": [PLAYER ID]
 , "status": "playing"
 }
@@ -128,13 +128,13 @@ Basic Auth with session token and secret
 * **200 OK** with
 ```json
 [ { "id": [MATCH ID]
-  , "rival": [PLAYER ID]
+  , "rival": {"id": [RIVAL ID], "name": [RIVAL NAME]}
   , "board": [[true], [false,true], [false,false,false], …]
   , "current-player": [PLAYER ID]
   , "status": "playing" | "won" | "lost"
   }
 , { "id": [MATCH ID]
-  , "rival": [PLAYER ID]
+  , "rival": {"id": [RIVAL ID], "name": [RIVAL NAME]}
   , "board": [[true], [false,true], [false,false,false], …]
   , "current-player": [PLAYER ID]
   , "status": "playing" | "won" | "lost"
@@ -156,7 +156,7 @@ None
 * **200 OK** with
 ```json
 { "id": [MATCH ID]
-, "rival": [PLAYER ID]
+, "rival": {"id": [RIVAL ID], "name": [RIVAL NAME]}
 , "board": [[true], [false,true], [false,false,false], …]
 , "current-player": [PLAYER ID]
 , "status": "playing" | "won" | "lost"
@@ -182,7 +182,7 @@ Basic Auth with session token and secret
 * **200 OK** with
 ```json
 { "id": [MATCH ID]
-, "rival": [PLAYER ID]
+, "rival": {"id": [RIVAL ID], "name": [RIVAL NAME]}
 , "board": [[true], [false,true], [false,false,false], …]
 , "current-player": [PLAYER ID]
 , "status": "playing" | "won" | "lost"

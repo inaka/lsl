@@ -1,5 +1,4 @@
 -module(lsl_api_sessions_SUITE).
-
 -author('elbrujohalcon@inaka.net').
 
 -include_lib("mixer/include/mixer.hrl").
@@ -37,38 +36,40 @@ all() -> lsl_test_utils:all(?MODULE).
 
 -spec init_per_testcase(atom(), lsl_test_utils:config()) ->
         lsl_test_utils:config().
-init_per_testcase(post_sessions_wrong, Config) ->
-  add_player(post_sessions_wrong, Config);
-init_per_testcase(post_sessions_ok, Config) ->
-  add_player(post_sessions_ok, Config);
-init_per_testcase(delete_sessions_wrong, Config) ->
-  add_sesssion2(
-    add_player2(
-      add_sesssions(
-        add_player(delete_sessions_wrong, Config))));
-init_per_testcase(delete_sessions_ok, Config) ->
-  add_sesssion2(
-    add_player2(
-      add_sesssions(
-        add_player(delete_sessions_ok, Config)))).
+init_per_testcase(TestCase, Config) ->
+  Name = atom_to_binary(TestCase, utf8),
+  Player1 = lsl_test_utils:register_player(Name),
+  SessionA = lsl_test_utils:open_session(Player1),
+  SessionB = lsl_test_utils:open_session(Player1),
+  Player2 = lsl_test_utils:register_player(<<Name/binary, "-2">>),
+  Session2 = lsl_test_utils:open_session(Player2),
+  [ {player1, Player1}
+  , {sessiona, SessionA}
+  , {sessionb, SessionB}
+  , {player2, Player2}
+  , {session2, Session2}
+  | Config
+  ].
 
 -spec end_per_testcase(atom(), lsl_test_utils:config()) ->
         lsl_test_utils:config().
-end_per_testcase(delete_sessions_wrong, Config) ->
-  {value, {player, Player}, Config1} = lists:keytake(player, 1, Config),
-  {value, {player2, Player2}, Config2} = lists:keytake(player2, 1, Config1),
-  sumo:delete(lsl_players, lsl_players:id(Player)),
-  sumo:delete(lsl_players, lsl_players:id(Player2)),
-  lists:keydelete(session2, 1, lists:keydelete(session, 1, Config2));
 end_per_testcase(_TestCase, Config) ->
-  {value, {player, Player}, Config1} = lists:keytake(player, 1, Config),
-  sumo:delete(lsl_players, lsl_players:id(Player)),
-  lists:keydelete(sessionb, 1, lists:keydelete(session, 1, Config1)).
+  {value, {player1, Player1}, Config1} = lists:keytake(player1, 1, Config),
+  sumo:delete(lsl_players, lsl_players:id(Player1)),
+  {value, {player2, Player2}, Config2} = lists:keytake(player2, 1, Config1),
+  sumo:delete(lsl_players, lsl_players:id(Player2)),
+  {value, {sessiona, SessionA}, Config3} = lists:keytake(session1, 1, Config2),
+  lsl:close_session(lsl_sessions:token(SessionA)),
+  {value, {sessionb, SessionB}, Config4} = lists:keytake(session1, 1, Config3),
+  lsl:close_session(lsl_sessions:token(SessionB)),
+  {value, {session2, Session2}, Config5} = lists:keytake(session1, 1, Config4),
+  lsl:close_session(lsl_sessions:token(Session2)),
+  Config5.
 
 -spec post_sessions_wrong(lsl_test_utils:config()) -> {comment, []}.
 post_sessions_wrong(Config) ->
-  {player, Player} = lists:keyfind(player, 1, Config),
-  Name = binary_to_list(lsl_players:name(Player)),
+  {player1, Player1} = lists:keyfind(player1, 1, Config),
+  Name = binary_to_list(lsl_players:name(Player1)),
 
   ct:comment("POST without auth fails"),
   #{status_code := 401,
@@ -96,8 +97,8 @@ post_sessions_wrong(Config) ->
 
 -spec post_sessions_ok(lsl_test_utils:config()) -> {comment, []}.
 post_sessions_ok(Config) ->
-  {player, Player} = lists:keyfind(player, 1, Config),
-  Name = binary_to_list(lsl_players:name(Player)),
+  {player1, Player1} = lists:keyfind(player1, 1, Config),
+  Name = binary_to_list(lsl_players:name(Player1)),
   Headers = #{ basic_auth => {Name, "pwd"}
              , <<"content-type">> => <<"application/json; charset=utf8">>
              },
@@ -132,11 +133,11 @@ post_sessions_ok(Config) ->
 
 -spec delete_sessions_wrong(lsl_test_utils:config()) -> {comment, []}.
 delete_sessions_wrong(Config) ->
-  {player, Player} = lists:keyfind(player, 1, Config),
-  Name = binary_to_list(lsl_players:name(Player)),
-  {session, Session} = lists:keyfind(session, 1, Config),
-  Token = binary_to_list(lsl_sessions:token(Session)),
-  Secret = binary_to_list(lsl_sessions:secret(Session)),
+  {player1, Player1} = lists:keyfind(player1, 1, Config),
+  Name = binary_to_list(lsl_players:name(Player1)),
+  {sessiona, SessionA} = lists:keyfind(sessiona, 1, Config),
+  Token = binary_to_list(lsl_sessions:token(SessionA)),
+  Secret = binary_to_list(lsl_sessions:secret(SessionA)),
   {session2, Session2} = lists:keyfind(session2, 1, Config),
   Token2 = binary_to_list(lsl_sessions:token(Session2)),
 
@@ -187,9 +188,9 @@ delete_sessions_wrong(Config) ->
 
 -spec delete_sessions_ok(lsl_test_utils:config()) -> {comment, []}.
 delete_sessions_ok(Config) ->
-  {session, Session} = lists:keyfind(session, 1, Config),
-  Token = binary_to_list(lsl_sessions:token(Session)),
-  Secret = binary_to_list(lsl_sessions:secret(Session)),
+  {sessiona, SessionA} = lists:keyfind(sessiona, 1, Config),
+  Token = binary_to_list(lsl_sessions:token(SessionA)),
+  Secret = binary_to_list(lsl_sessions:secret(SessionA)),
   {sessionb, SessionB} = lists:keyfind(sessionb, 1, Config),
   TokenB = binary_to_list(lsl_sessions:token(SessionB)),
   {player2, Player2} = lists:keyfind(player2, 1, Config),
@@ -215,39 +216,3 @@ delete_sessions_ok(Config) ->
   #{status_code := 204} = lsl_test_utils:api_call(delete, Url1, Headers1),
 
   {comment, ""}.
-
-
-
-add_player(TestCase, Config) ->
-  Name = atom_to_binary(TestCase, utf8),
-  try lsl:register_player(Name, <<"pwd">>) of
-    Player ->
-      [{player, Player} | Config]
-  catch
-    throw:conflict ->
-      [Player | _] = sumo:find_by(lsl_players, [{name, Name}]),
-      [{player, Player} | Config]
-  end.
-
-add_sesssions(Config) ->
-  {player, Player} = lists:keyfind(player, 1, Config),
-  PlayerId = lsl_players:id(Player),
-  [ {session, lsl:open_session(PlayerId)}
-  , {sessionb, lsl:open_session(PlayerId)}
-  | Config].
-
-add_player2(Config) ->
-  Name = <<"player2">>,
-  try lsl:register_player(Name, <<"pwd">>) of
-    Player ->
-      [{player2, Player} | Config]
-  catch
-    throw:conflict ->
-      [Player | _] = sumo:find_by(lsl_players, [{name, Name}]),
-      [{player2, Player} | Config]
-  end.
-
-add_sesssion2(Config) ->
-  {player2, Player} = lists:keyfind(player2, 1, Config),
-  PlayerId = lsl_players:id(Player),
-  [{session2, lsl:open_session(PlayerId)} | Config].

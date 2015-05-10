@@ -12,6 +12,10 @@
         , api_call/3
         , api_call/4
         ]).
+-export([ register_player/1
+        , register_player/2
+        , open_session/1
+        ]).
 -export([full_match/2]).
 
 -spec all(atom()) -> [atom()].
@@ -57,3 +61,23 @@ full_match(Mod, Match) ->
 
 do_full_match(_Mod, {lost, _Match}) -> ok;
 do_full_match(Mod, {_, Match}) -> do_full_match(Mod, lsl_ai:play(Mod, Match)).
+
+-spec register_player(binary()) -> lsl_players:player().
+register_player(Name) -> register_player(Name, <<"pwd">>).
+
+-spec register_player(binary(), binary()) -> lsl_players:player().
+register_player(Name, Password) ->
+  try lsl:register_player(Name, Password)
+  catch
+    throw:conflict ->
+      case lsl:fetch_player(Name, Password) of
+        notfound ->
+          sumo:delete_by(lsl_players, [{name, Name}]),
+          register_player(Name, Password);
+        Player -> Player
+      end
+  end.
+
+-spec open_session(lsl_players:player()) -> lsl_sessions:session().
+open_session(Player) ->
+  lsl:open_session(lsl_players:id(Player)).

@@ -40,27 +40,18 @@ all() -> lsl_test_utils:all(?MODULE).
         lsl_test_utils:config().
 init_per_testcase(TestCase, Config) ->
   Name = atom_to_binary(TestCase, utf8),
-  [{player, Player1} | _] =
-    Config1 =
-      try lsl:register_player(Name, <<"pwd">>) of
-        Player ->
-          [{player, Player} | Config]
-      catch
-        throw:conflict ->
-          [Player | _] = sumo:find_by(lsl_players, [{name, Name}]),
-          [{player, Player} | Config]
-      end,
-  [{session, lsl:open_session(lsl_players:id(Player1))} | Config1].
+  Player = lsl_test_utils:register_player(Name),
+  Session = lsl_test_utils:open_session(Player),
+  [{player, Player}, {session, Session} | Config].
 
 -spec end_per_testcase(atom(), lsl_test_utils:config()) ->
         lsl_test_utils:config().
 end_per_testcase(_TestCase, Config) ->
-  case lists:keytake(player, 1, Config) of
-    false -> Config;
-    {value, {player, Player}, Config1} ->
-      sumo:delete(lsl_players, lsl_players:id(Player)),
-      lists:keydelete(session, 1, Config1)
-  end.
+  {value, {player, Player}, Config1} = lists:keytake(player, 1, Config),
+  sumo:delete(lsl_players, lsl_players:id(Player)),
+  {value, {session, Session}, Config2} = lists:keytake(session, 1, Config1),
+  lsl:close_session(lsl_sessions:token(Session)),
+  Config2.
 
 -spec post_players_wrong(lsl_test_utils:config()) -> {comment, []}.
 post_players_wrong(_Config) ->
