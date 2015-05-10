@@ -11,11 +11,13 @@
         ]).
 
 -export([ register_player/2
+        , unregister_player/1
         , fetch_player/2
         , open_session/1
         , close_session/1
         , can_close_session/2
         , fetch_session_player/2
+        , fetch_players/0
         ]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -74,6 +76,10 @@ stop([]) -> ok.
 -spec register_player(binary(), binary()) -> lsl_players:player().
 register_player(Name, Password) -> lsl_players_repo:register(Name, Password).
 
+%% @doc Deletes a player
+-spec unregister_player(binary()) -> boolean().
+unregister_player(PlayerId) -> lsl_players_repo:unregister(PlayerId).
+
 %% @doc Retrieves a player given its name and password
 -spec fetch_player(binary(), binary()) -> lsl_players:player() | notfound.
 fetch_player(Name, Password) -> lsl_players_repo:fetch(Name, Password).
@@ -103,3 +109,7 @@ fetch_session_player(Token, Secret) ->
         Player -> Player
       end
   end.
+
+%% @doc Retrieves all playesr
+-spec fetch_players() -> [lsl_players:player(),...].
+fetch_players() -> lsl_players_repo:all().

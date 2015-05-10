@@ -5,6 +5,8 @@
 -export([ register/2
         , fetch/2
         , fetch/1
+        , unregister/1
+        , all/0
         ]).
 
 %% @doc Creates a new player
@@ -36,3 +38,13 @@ fetch(Name, Password) ->
 -spec fetch(binary()) -> lsl_players:player() | notfound.
 fetch(PlayerId) ->
   sumo:find(lsl_players, PlayerId).
+
+%% @doc Removes a player
+-spec unregister(binary()) -> boolean().
+unregister(PlayerId) ->
+  sumo:delete(lsl_players, PlayerId).
+
+%% @doc Retrieves all players
+-spec all() -> [lsl_players:player()].
+all() ->
+  sumo:find_all(lsl_players).

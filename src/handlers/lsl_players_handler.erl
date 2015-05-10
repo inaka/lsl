@@ -15,6 +15,7 @@
 
 -export([ allowed_methods/2
         , handle_post/2
+        , handle_get/2
         , is_authorized/2
         ]).
 
@@ -23,12 +24,18 @@
 -spec allowed_methods(cowboy_req:req(), state()) ->
   {[binary()], cowboy_req:req(), state()}.
 allowed_methods(Req, State) ->
-  {[<<"POST">>], Req, State}.
+  {[<<"POST">>, <<"GET">>], Req, State}.
 
 -spec is_authorized(cowboy_req:req(), state()) ->
   {true | {false, binary()}, cowboy_req:req(), state()}.
 is_authorized(Req, State) ->
-  lsl_base_handler:is_authorized([none], Req, State).
+  {Method, Req1} = cowboy_req:method(Req),
+  AuthMethod =
+    case Method of
+      <<"POST">> -> none;
+      <<"GET">> -> session
+    end,
+  lsl_base_handler:is_authorized([AuthMethod], Req, State).
 
 -spec handle_post(cowboy_req:req(), state()) ->
     {halt | {boolean(), binary()}, cowboy_req:req(), state()}.
@@ -41,6 +48,19 @@ handle_post(Req, State) ->
     RespBody = lsl_json:encode(lsl_players:to_json(Player)),
     Req2 = cowboy_req:set_resp_body(RespBody, Req1),
     {{true, <<"/players/", PlayerId/binary>>}, Req2, State}
+  catch
+    _:Exception ->
+      lsl_web_utils:handle_exception(Exception, Req, State)
+  end.
+
+-spec handle_get(cowboy_req:req(), state()) ->
+    {iodata(), cowboy_req:req(), state()}.
+handle_get(Req, State) ->
+  try
+    RespBody =
+      lsl_json:encode(
+        [lsl_players:to_json(Player) || Player <- lsl:fetch_players()]),
+    {RespBody, Req, State}
   catch
     _:Exception ->
       lsl_web_utils:handle_exception(Exception, Req, State)

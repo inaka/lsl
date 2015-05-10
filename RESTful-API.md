@@ -87,11 +87,10 @@ Basic Auth with session token and secret
 None
 ##### Responses
 * **401 Unauthorized**
-* **400 Bad Request** with a descriptive message
 * **200 OK** with
 ```json
-[ {"id" : [PLAYER ID], "name": [PLAYER NAME]}
-, {"id" : [PLAYER ID], "name": [PLAYER NAME]}
+[ {"id" : [PLAYER ID], "name": [PLAYER NAME], "created_at": [DATE]}
+, {"id" : [PLAYER ID], "name": [PLAYER NAME], "created_at": [DATE]}
 , …
 ]
 ```

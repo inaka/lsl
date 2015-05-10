@@ -9,21 +9,50 @@
          ]}
        ]).
 
--ignore_xref([all/0]).
--ignore_xref([init_per_suite/1, end_per_suite/1]).
+-ignore_xref([ all/0
+             , init_per_suite/1
+             , end_per_suite/1
+             , init_per_testcase/2
+             , end_per_testcase/2
+             ]).
 -ignore_xref([ post_players_wrong/1
              , post_players_conflict/1
              , post_players_ok/1
+             , get_players_wrong/1
+             , get_players_ok/1
              ]).
 
--export([all/0]).
+-export([ all/0
+        , init_per_testcase/2
+        , end_per_testcase/2
+        ]).
 -export([ post_players_wrong/1
         , post_players_conflict/1
         , post_players_ok/1
+        , get_players_wrong/1
+        , get_players_ok/1
         ]).
 
 -spec all() -> [atom()].
 all() -> lsl_test_utils:all(?MODULE).
+
+-spec init_per_testcase(atom(), lsl_test_utils:config()) ->
+        lsl_test_utils:config().
+init_per_testcase(get_players_wrong, Config) ->
+  add_player_and_session(get_players_wrong, Config);
+init_per_testcase(get_players_ok, Config) ->
+  add_player_and_session(get_players_ok, Config);
+init_per_testcase(_, Config) -> Config.
+
+-spec end_per_testcase(atom(), lsl_test_utils:config()) ->
+        lsl_test_utils:config().
+end_per_testcase(_TestCase, Config) ->
+  case lists:keytake(player, 1, Config) of
+    false -> Config;
+    {value, {player, Player}, Config1} ->
+      sumo:delete(lsl_players, lsl_players:id(Player)),
+      lists:keydelete(session, 1, Config1)
+  end.
 
 -spec post_players_wrong(lsl_test_utils:config()) -> {comment, []}.
 post_players_wrong(_Config) ->
@@ -118,3 +147,81 @@ post_players_ok(_Config) ->
   end,
 
   {comment, ""}.
+
+-spec get_players_wrong(lsl_test_utils:config()) -> {comment, []}.
+get_players_wrong(Config) ->
+  {session, Session} = lists:keyfind(session, 1, Config),
+  Token = binary_to_list(lsl_sessions:token(Session)),
+
+  ct:comment("GET without auth fails"),
+  #{status_code := 401,
+        headers := RHeaders0} = lsl_test_utils:api_call(get, "/players"),
+  {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeaders0),
+
+  ct:comment("GET with wrong auth fails"),
+  Headers1 = #{basic_auth => {"some token", "very bad secret"}},
+  #{status_code := 401,
+        headers := RHeaders1} =
+    lsl_test_utils:api_call(get, "/players", Headers1),
+  {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeaders1),
+
+  ct:comment("GET with wrong secret fails"),
+  Headers2 = #{basic_auth => {Token, "very bad secret"}},
+  #{status_code := 401,
+        headers := RHeaders2} =
+    lsl_test_utils:api_call(get, "/players", Headers2),
+  {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeaders2),
+
+  {comment, ""}.
+
+-spec get_players_ok(lsl_test_utils:config()) -> {comment, []}.
+get_players_ok(Config) ->
+  {session, Session} = lists:keyfind(session, 1, Config),
+  Token = binary_to_list(lsl_sessions:token(Session)),
+  Secret = binary_to_list(lsl_sessions:secret(Session)),
+  Headers = #{basic_auth => {Token, Secret}},
+
+  ct:comment("GET /players returns at least the caller"),
+  #{status_code := 200,
+           body := Body1} =
+    lsl_test_utils:api_call(get, "/players", Headers),
+  Players1 = lsl_json:decode(Body1),
+  [_] =
+    [Id || #{<<"id">> := Id, <<"name">> := <<"get_players_ok">>} <- Players1],
+  [] = [Pwd || #{<<"password">> := Pwd} <- Players1],
+
+  ct:comment("When a player is added, GET /players should return it"),
+  Player2 = lsl:register_player(<<"get_players_ok-2">>, <<"pwd">>),
+  #{status_code := 200,
+           body := Body2} =
+    lsl_test_utils:api_call(get, "/players", Headers),
+  Players2 = lsl_json:decode(Body2),
+  [#{<<"name">> := <<"get_players_ok-2">>}] = Players2 -- Players1,
+
+  ct:comment("When a player is removed, GET /players should not return it"),
+  lsl:unregister_player(lsl_players:id(Player2)),
+  #{status_code := 200,
+           body := Body3} =
+    lsl_test_utils:api_call(get, "/players", Headers),
+  Players3 = lsl_json:decode(Body3),
+  [] = Players3 -- Players1,
+
+  {comment, ""}.
+
+
+add_player_and_session(TestCase, Config) ->
+  Name = atom_to_binary(TestCase, utf8),
+  [{player, Player1} | _] =
+    Config1 =
+      try lsl:register_player(Name, <<"pwd">>) of
+        Player ->
+          [{player, Player} | Config]
+      catch
+        throw:conflict ->
+          [Player | _] = sumo:find_by(lsl_players, [{name, Name}]),
+          [{player, Player} | Config]
+      end,
+  [{session, lsl:open_session(lsl_players:id(Player1))} | Config1].
