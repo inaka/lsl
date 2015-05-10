@@ -38,11 +38,19 @@ all() -> lsl_test_utils:all(?MODULE).
 
 -spec init_per_testcase(atom(), lsl_test_utils:config()) ->
         lsl_test_utils:config().
-init_per_testcase(get_players_wrong, Config) ->
-  add_player_and_session(get_players_wrong, Config);
-init_per_testcase(get_players_ok, Config) ->
-  add_player_and_session(get_players_ok, Config);
-init_per_testcase(_, Config) -> Config.
+init_per_testcase(TestCase, Config) ->
+  Name = atom_to_binary(TestCase, utf8),
+  [{player, Player1} | _] =
+    Config1 =
+      try lsl:register_player(Name, <<"pwd">>) of
+        Player ->
+          [{player, Player} | Config]
+      catch
+        throw:conflict ->
+          [Player | _] = sumo:find_by(lsl_players, [{name, Name}]),
+          [{player, Player} | Config]
+      end,
+  [{session, lsl:open_session(lsl_players:id(Player1))} | Config1].
 
 -spec end_per_testcase(atom(), lsl_test_utils:config()) ->
         lsl_test_utils:config().
@@ -111,7 +119,7 @@ post_players_conflict(_Config) ->
 
 -spec post_players_ok(lsl_test_utils:config()) -> {comment, []}.
 post_players_ok(_Config) ->
-  ct:comment("Make sure to delete the players"),
+  ct:comment("Make sure not to have the players already"),
   sumo:delete_by(lsl_players, [{name, <<"test-ok-player">>}]),
   sumo:delete_by(lsl_players, [{name, <<"test-ok-player-2">>}]),
 
@@ -194,34 +202,11 @@ get_players_ok(Config) ->
   [] = [Pwd || #{<<"password">> := Pwd} <- Players1],
 
   ct:comment("When a player is added, GET /players should return it"),
-  Player2 = lsl:register_player(<<"get_players_ok-2">>, <<"pwd">>),
+  lsl:register_player(<<"get_players_ok-2">>, <<"pwd">>),
   #{status_code := 200,
            body := Body2} =
     lsl_test_utils:api_call(get, "/players", Headers),
   Players2 = lsl_json:decode(Body2),
   [#{<<"name">> := <<"get_players_ok-2">>}] = Players2 -- Players1,
 
-  ct:comment("When a player is removed, GET /players should not return it"),
-  lsl:unregister_player(lsl_players:id(Player2)),
-  #{status_code := 200,
-           body := Body3} =
-    lsl_test_utils:api_call(get, "/players", Headers),
-  Players3 = lsl_json:decode(Body3),
-  [] = Players3 -- Players1,
-
   {comment, ""}.
-
-
-add_player_and_session(TestCase, Config) ->
-  Name = atom_to_binary(TestCase, utf8),
-  [{player, Player1} | _] =
-    Config1 =
-      try lsl:register_player(Name, <<"pwd">>) of
-        Player ->
-          [{player, Player} | Config]
-      catch
-        throw:conflict ->
-          [Player | _] = sumo:find_by(lsl_players, [{name, Name}]),
-          [{player, Player} | Config]
-      end,
-  [{session, lsl:open_session(lsl_players:id(Player1))} | Config1].

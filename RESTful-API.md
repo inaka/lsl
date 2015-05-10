@@ -23,9 +23,6 @@
 #### Voluntarily invalidating a session
 1. Delete the session ([``DELETE /sessions/:session_token``](#delete-sessionssession_token))
 
-#### Delete an Account
-1. Delete the player ([``DELETE /players/:player_id``](#delete-playersplayer_id))
-
 #### Cancelling a Match
 1. Delete the match ([``DELETE /matches/:match_id``](#delete-matchesmatch_id))
 
@@ -94,17 +91,6 @@ None
 , …
 ]
 ```
-
-#### ``DELETE /players/:player_id``
-To unregister a player
-##### Authentication
-Basic Auth with username and password or session token and secret
-##### Parameters
-None
-##### Responses
-* **401 Unauthorized**
-* **400 Bad Request** with a descriptive message
-* **204 No Content**
 
 #### ``POST /matches``
 To create matches
