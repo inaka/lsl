@@ -55,7 +55,7 @@ end_per_testcase(_TestCase, Config) ->
   sumo:delete(lsl_players, lsl_players:id(Player2)),
   {value, {session1, Session1}, Config3} = lists:keytake(session1, 1, Config2),
   lsl:close_session(lsl_sessions:token(Session1)),
-  {value, {session2, Session2}, Config4} = lists:keytake(session1, 1, Config3),
+  {value, {session2, Session2}, Config4} = lists:keytake(session2, 1, Config3),
   lsl:close_session(lsl_sessions:token(Session2)),
   application:unset_env(lsl, default_rows),
   Config4.
@@ -64,7 +64,7 @@ end_per_testcase(_TestCase, Config) ->
 post_matches_wrong(Config) ->
   {player1, Player1} = lists:keyfind(player1, 1, Config),
   Name = binary_to_list(lsl_players:name(Player1)),
-  {sessiona, SessionA} = lists:keyfind(sessiona, 1, Config),
+  {session1, SessionA} = lists:keyfind(session1, 1, Config),
   Token = binary_to_list(lsl_sessions:token(SessionA)),
   Secret = binary_to_list(lsl_sessions:secret(SessionA)),
   {player2, Player2} = lists:keyfind(player2, 1, Config),
@@ -127,8 +127,11 @@ post_matches_wrong(Config) ->
   ct:comment("Invalid rival fails"),
   #{status_code := 400,
            body := Body2} =
-    lsl_test_utils:api_call(post, "/matches", Headers, "{\"rival\":\"no-id\"}"),
+    lsl_test_utils:api_call(post, "/matches", Headers, "{\"rival\":\"false\"}"),
   #{<<"error">> := <<"invalid field: rival">>} = lsl_json:decode(Body2),
+  #{status_code := 400,
+           body := Body2} =
+    lsl_test_utils:api_call(post, "/matches", Headers, "{\"rival\":\"io\"}"),
 
   ct:comment("Invalid rows fails"),
   ReqBody3 = lsl_json:encode(#{rival => lsl_ai_dumb, rows => -1}),
@@ -158,14 +161,16 @@ post_matches_wrong(Config) ->
 post_matches_ok(Config) ->
   {player1, Player1} = lists:keyfind(player1, 1, Config),
   PlayerId = lsl_players:id(Player1),
-  {sessiona, SessionA} = lists:keyfind(sessiona, 1, Config),
+  {session1, SessionA} = lists:keyfind(session1, 1, Config),
   Token = binary_to_list(lsl_sessions:token(SessionA)),
   Secret = binary_to_list(lsl_sessions:secret(SessionA)),
   {player2, Player2} = lists:keyfind(player2, 1, Config),
   Rival = lsl_players:id(Player2),
   RivalName = lsl_players:name(Player2),
   Headers =
-    #{basic_auth => {Token, Secret}, <<"content-type">> => <<"text/plain">>},
+    #{ basic_auth => {Token, Secret}
+     , <<"content-type">> => <<"application/json">>
+     },
   AIName = lsl_ai_dumb:name(),
 
   ct:comment("Start a match against another player, default # of rows"),

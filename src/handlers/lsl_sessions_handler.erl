@@ -1,4 +1,4 @@
-%%% @doc POST|DELETE /sessions/[:session_token] handler
+%%% @doc /sessions/[:session_token] handler
 -module(lsl_sessions_handler).
 -author('elbrujohalcon@inaka.net').
 

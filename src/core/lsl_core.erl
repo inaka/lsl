@@ -1,5 +1,5 @@
 %%% @doc Internal representation and logic of a LSL match.
--module(lsl_match).
+-module(lsl_core).
 -author('elbrujohalcon@inaka.net').
 
 -type stick_state() :: clean | crossed.
@@ -25,8 +25,8 @@
 -export_type([cross_result/0]).
 
 -export([new/1, rows/1, snapshot/1]).
--export([cross/4, undo/1]).
--export([print/1]).
+-export([cross/4, undo/1, last_result/1]).
+-export([print/1, to_json/1]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% EXPORTED FUNCTIONS
@@ -73,11 +73,22 @@ undo(Match = #{history := [Row|History]}) ->
   Match#{board := NewBoard, history := History};
 undo(_Match) -> throw(no_history).
 
+%% @doc Returns the last cross result.
+%%      In other words, the status of the match
+-spec last_result(match()) -> cross_result().
+last_result(#{board := Board}) ->
+  cross_result(Board).
+
 %% @doc returns a printable version of the board
 -spec print(match()) -> iodata().
 print(#{board := Board}) ->
   RowWidth = length(Board),
   [print(Row, RowWidth) || Row <- Board].
+
+%% @doc returns a json-able version of the board
+-spec to_json(match()) -> [[boolean()]].
+to_json(#{board := Board}) ->
+  [[Item == crossed || Item <- Row] || Row <- Board].
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% INTERNAL FUNCTIONS

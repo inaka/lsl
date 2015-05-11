@@ -6,16 +6,20 @@
 
 -behaviour(lsl_ai).
 
--export([play/1, next_move/1]).
+-export([play/1, name/0, next_move/1]).
 
 %% @equiv lsl_ai:play(lsl_ai_dumb, Match).
--spec play(lsl_match:match()) -> {lsl_match:cross_result(), lsl_match:match()}.
+-spec play(lsl_core:match()) -> {lsl_core:cross_result(), lsl_core:match()}.
 play(Match) -> lsl_ai:play(?MODULE, Match).
 
 %% @private
--spec next_move(lsl_match:match()) -> lsl_ai:move().
+-spec name() -> binary().
+name() -> <<"DumbAI">>.
+
+%% @private
+-spec next_move(lsl_core:match()) -> lsl_ai:move().
 next_move(Match) ->
-  Snapshot = lsl_match:snapshot(Match),
+  Snapshot = lsl_core:snapshot(Match),
   next_move(1, 1, Snapshot).
 
 next_move(_, _, []) -> throw(cant_move);

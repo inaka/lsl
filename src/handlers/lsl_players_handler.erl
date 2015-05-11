@@ -1,4 +1,4 @@
-%%% @doc POST|GET|DELETE /players/[:player_id] handler
+%%% @doc /players/[:player_id] handler
 -module(lsl_players_handler).
 -author('elbrujohalcon@inaka.net').
 
@@ -35,7 +35,7 @@ is_authorized(Req, State) ->
       <<"POST">> -> none;
       <<"GET">> -> session
     end,
-  lsl_base_handler:is_authorized([AuthMethod], Req, State).
+  lsl_base_handler:is_authorized([AuthMethod], Req1, State).
 
 -spec handle_post(cowboy_req:req(), state()) ->
     {halt | {boolean(), binary()}, cowboy_req:req(), state()}.

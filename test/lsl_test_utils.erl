@@ -55,7 +55,7 @@ api_call(Method, Uri, Headers, Body) ->
     shotgun:close(Pid)
   end.
 
--spec full_match(module(), lsl_match:match()) -> ok.
+-spec full_match(module(), lsl_core:match()) -> ok.
 full_match(Mod, Match) ->
   do_full_match(Mod, lsl_ai:play(Mod, Match)).
 

@@ -20,6 +20,10 @@ handle_exception({missing_field, Field}, Req, State) ->
   Response = lsl_json:encode(#{error => <<"missing field: ", Field/binary>>}),
   {ok, Req1} = cowboy_req:reply(400, [], Response, Req),
   {halt, Req1, State};
+handle_exception({invalid_field, Field}, Req, State) ->
+  Response = lsl_json:encode(#{error => <<"invalid field: ", Field/binary>>}),
+  {ok, Req1} = cowboy_req:reply(400, [], Response, Req),
+  {halt, Req1, State};
 handle_exception(conflict, Req, State) ->
   {ok, Req1} = cowboy_req:reply(409, Req),
   {halt, Req1, State};

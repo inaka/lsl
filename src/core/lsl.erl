@@ -12,11 +12,14 @@
 
 -export([ register_player/2
         , fetch_player/2
+        , fetch_player/1
         , open_session/1
         , close_session/1
         , can_close_session/2
         , fetch_session_player/2
         , fetch_players/0
+        , start_match/3
+        , fetch_ai/1
         ]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -53,6 +56,7 @@ start_phase(start_cowboy_listeners, _StartType, []) ->
       [ {"/status", lsl_status_handler,  []}
       , {"/players", lsl_players_handler, []}
       , {"/sessions/[:session_token]", lsl_sessions_handler, []}
+      , {"/matches/[:match_id]", lsl_matches_handler, []}
       ]
      }
     ],
@@ -79,6 +83,10 @@ register_player(Name, Password) -> lsl_players_repo:register(Name, Password).
 -spec fetch_player(binary(), binary()) -> lsl_players:player() | notfound.
 fetch_player(Name, Password) -> lsl_players_repo:fetch(Name, Password).
 
+%% @doc Retrieves a player given its id
+-spec fetch_player(binary()) -> lsl_players:player() | notfound.
+fetch_player(PlayerId) -> lsl_players_repo:fetch(PlayerId).
+
 %% @doc Generates a new session for the player
 -spec open_session(binary()) -> lsl_sessions:session().
 open_session(PlayerId) -> lsl_sessions_repo:open(PlayerId).
@@ -104,3 +112,13 @@ fetch_session_player(Token, Secret) ->
 %% @doc Retrieves all playesr
 -spec fetch_players() -> [lsl_players:player(),...].
 fetch_players() -> lsl_players_repo:all().
+
+%% @doc Starts a new match
+-spec start_match(binary(), module()|binary(), pos_integer()) ->
+  lsl_matches:match().
+start_match(PlayerId, Rival, Rows) ->
+  lsl_matches_repo:start(PlayerId, Rival, Rows).
+
+%% @doc Retrieves an AI module
+-spec fetch_ai(binary()) -> module() | notfound.
+fetch_ai(AIId) -> lsl_ai:fetch(AIId).

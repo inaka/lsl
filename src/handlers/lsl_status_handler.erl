@@ -1,4 +1,4 @@
-%%% @doc GET /status handler
+%%% @doc /status handler
 -module(lsl_status_handler).
 -author('elbrujohalcon@inaka.net').
 
