@@ -1,3 +1,4 @@
+%%% @doc Main Application Module
 -module(lsl).
 -author('elbrujohalcon@inaka.net').
 
