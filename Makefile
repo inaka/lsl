@@ -6,15 +6,16 @@ DEPS = eper mixer lager cowboy jiffy sumo katana erlpass
 SELL_DEPS = sync
 TEST_DEPS = xref_runner shotgun
 
-dep_erlpass = git https://github.com/ferd/erlpass.git 1.0.1
-dep_katana = git https://github.com/inaka/erlang-katana.git 0.2.5
-dep_sumo = git https://github.com/inaka/sumo_db.git 55334a8
-dep_cowboy = git https://github.com/extend/cowboy.git 1.0.1
-dep_jiffy = git https://github.com/davisp/jiffy.git 0.13.3
-dep_eper = git https://github.com/massemanet/eper.git 0.90.0
-dep_mixer = git https://github.com/inaka/mixer.git 0.1.2
-dep_sync = git https://github.com/inaka/sync.git 0.1
-dep_shotgun = git https://github.com/inaka/shotgun.git 0.1.8
+dep_lager = git https://github.com/basho/lager.git 3.0.1
+dep_erlpass = git https://github.com/inaka/erlpass.git 1.0.2
+dep_katana = git https://github.com/inaka/erlang-katana.git 0.2.8
+dep_sumo = git https://github.com/inaka/sumo_db.git 0.3.11
+dep_cowboy = git https://github.com/extend/cowboy.git 1.0.2
+dep_jiffy = git https://github.com/davisp/jiffy.git 446e284b
+dep_eper = git https://github.com/massemanet/eper.git 0.92.0
+dep_mixer = git https://github.com/inaka/mixer.git 0.1.3
+dep_sync = git https://github.com/inaka/sync.git 0.1.3
+dep_shotgun = git https://github.com/inaka/shotgun.git 0.1.12
 dep_xref_runner = git https://github.com/inaka/xref_runner.git 0.2.2
 
 DIALYZER_DIRS := ebin/
@@ -31,9 +32,9 @@ ERLC_OPTS += +warn_bif_clash +warn_unused_record +warn_deprecated_function +warn
 ERLC_OPTS += +warn_export_vars +warn_exported_vars +warn_missing_spec +warn_untyped_record +debug_info
 
 TEST_ERLC_OPTS += +'{parse_transform, lager_transform}'
-CT_OPTS += -cover test/lsl.coverspec -vvv -erl_args -config ${CONFIG}
+CT_OPTS += -cover test/${PROJECT}.coverspec -vvv -erl_args -config ${CONFIG}
 
-SHELL_OPTS += -name ${PROJECT}@`hostname` -config ${CONFIG} -s lager -s sync
+SHELL_OPTS += -name ${PROJECT}@`hostname` -config ${CONFIG} -boot start_sasl -s lager -s sync -s ${PROJECT}
 
 quicktests: app
 	@$(MAKE) --no-print-directory app-build test-dir ERLC_OPTS="$(TEST_ERLC_OPTS)"

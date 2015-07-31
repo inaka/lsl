@@ -1,3 +1,4 @@
+.erlang.mk/
 Mnesia*
 ebin
 deps
