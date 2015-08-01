@@ -16,6 +16,9 @@
    }.
 -export_type([match/0]).
 
+-type status() :: won | lost | playing.
+-export_type([status/0]).
+
 -export([new/4, to_json/2]).
 -export([sumo_schema/0, sumo_wakeup/1, sumo_sleep/1]).
 -export([id/1, core/1, core/2]).
@@ -111,8 +114,9 @@ to_json(Match, CallerId) ->
       end
    , board => lsl_core:to_json(Core)
    , 'current-player' => CurrentPlayer
-   , status =>
-      match_status(CallerId, CurrentPlayer, lsl_core:last_result(Core))
+   , status => atom_to_binary(
+                match_status(
+                  CallerId, CurrentPlayer, lsl_core:last_result(Core)), utf8)
    , created_at => CreatedAt
    , updated_at => UpdatedAt
    }.
@@ -137,8 +141,8 @@ core(Match, Core) ->
         , updated_at := ktn_date:now_human_readable()
         }.
 
-match_status(_CallerId, _CurrentPlayer, next) -> <<"playing">>;
-match_status(CallerId, CallerId, won) -> <<"lost">>;
-match_status(_CallerId, _Rival, won) -> <<"won">>;
-match_status(CallerId, CallerId, lost) -> <<"won">>;
-match_status(_CallerId, _Rival, lost) -> <<"lost">>.
+match_status(_CallerId, _CurrentPlayer, next) -> playing;
+match_status(CallerId,  CallerId,       won) ->  lost;
+match_status(_CallerId, _Rival,         won) ->  won;
+match_status(CallerId,  CallerId,       lost) -> won;
+match_status(_CallerId, _Rival,         lost) -> lost.

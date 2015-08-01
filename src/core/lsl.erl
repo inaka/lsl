@@ -21,6 +21,7 @@
         , fetch_players/0
         , start_match/3
         , fetch_ai/1
+        , find_matches/2
         ]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -112,9 +113,15 @@ fetch_session_player(Token, Secret) ->
     Session -> lsl_players_repo:fetch(lsl_sessions:player_id(Session))
   end.
 
-%% @doc Retrieves all playesr
+%% @doc Retrieves all players
 -spec fetch_players() -> [lsl_players:player(),...].
 fetch_players() -> lsl_players_repo:all().
+
+%% @doc Retrieves a list of matches for a particular player
+-spec find_matches(lsl_players:player(), all | lsl_matches:status()) ->
+  [lsl_matches:match()].
+find_matches(Player, Status) -> lsl_matches_repo:find(Player, Status).
+
 
 %% @doc Starts a new match
 -spec start_match(binary(), module()|binary(), pos_integer()) ->

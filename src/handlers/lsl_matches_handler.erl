@@ -16,6 +16,7 @@
 
 -export([ allowed_methods/2
         , handle_post/2
+        , handle_get/2
         ]).
 
 -type state() :: lsl_base_handler:state().
@@ -41,7 +42,7 @@
 -spec allowed_methods(cowboy_req:req(), state()) ->
   {[binary()], cowboy_req:req(), state()}.
 allowed_methods(Req, State) ->
-  {[<<"POST">>], Req, State}.
+  {[<<"POST">>, <<"GET">>], Req, State}.
 
 -spec handle_post(cowboy_req:req(), state()) ->
     {halt | {boolean(), binary()}, cowboy_req:req(), state()}.
@@ -66,6 +67,24 @@ handle_post(Req, State) ->
       lsl_web_utils:handle_exception(Exception, Req, State)
   end.
 
+-spec handle_get(cowboy_req:req(), state()) ->
+    {iodata(), cowboy_req:req(), state()}.
+handle_get(Req, State) ->
+  #{player := Player} = State,
+  try
+    {QsStatus, Req1} = cowboy_req:qs_val(<<"status">>, Req, <<"all">>),
+    Status = parse_qs(QsStatus),
+    RespBody =
+      lsl_json:encode(
+        [ lsl_matches:to_json(Match, lsl_players:id(Player))
+        || Match <- lsl:find_matches(Player, Status)
+        ]),
+    {RespBody, Req, State}
+  catch
+    _:Exception ->
+      lsl_web_utils:handle_exception(Exception, Req, State)
+  end.
+
 parse_body(Body) ->
   Json = lsl_json:decode(Body),
   DefaultRows = application:get_env(lsl, default_rows, 5),
@@ -85,3 +104,9 @@ parse_body(Body) ->
         AI -> {ai, AI, Rows}
       end
   end.
+
+parse_qs(<<"all">>) -> all;
+parse_qs(<<"won">>) -> won;
+parse_qs(<<"lost">>) -> lost;
+parse_qs(<<"playing">>) -> playing;
+parse_qs(_) -> throw({invalid_field, <<"status">>}).

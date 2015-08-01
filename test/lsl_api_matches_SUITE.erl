@@ -17,6 +17,8 @@
              ]).
 -ignore_xref([ post_matches_wrong/1
              , post_matches_ok/1
+             , get_matches_wrong/1
+             , get_matches_ok/1
              ]).
 
 -export([ all/0
@@ -25,6 +27,9 @@
         ]).
 -export([ post_matches_wrong/1
         , post_matches_ok/1
+        , get_matches_wrong/1
+        , get_matches_ok/1
+        , get_matches_status_ok/1
         ]).
 
 -spec all() -> [atom()].
@@ -241,4 +246,122 @@ post_matches_ok(Config) ->
     Id4 -> ok
   end,
 
+  {comment, ""}.
+
+-spec get_matches_wrong(lsl_test_utils:config()) -> {comment, []}.
+get_matches_wrong(Config) ->
+  {player1, Player1} = lists:keyfind(player1, 1, Config),
+  Name = binary_to_list(lsl_players:name(Player1)),
+  {session1, SessionA} = lists:keyfind(session1, 1, Config),
+  Token = binary_to_list(lsl_sessions:token(SessionA)),
+  Secret = binary_to_list(lsl_sessions:secret(SessionA)),
+
+  ct:comment("GET without auth fails"),
+  #{status_code := 401,
+        headers := RHeaders0} = lsl_test_utils:api_call(get, "/matches"),
+  {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeaders0),
+
+  ct:comment("GET with usr/pwd fails"),
+  Headers1 = #{basic_auth => {Name, "pwd"}},
+  #{status_code := 401,
+        headers := RHeaders1} =
+    lsl_test_utils:api_call(get, "/matches", Headers1),
+  {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeaders1),
+
+  ct:comment("GET with wrong token/secret fails"),
+  Headers2 = #{basic_auth => {"a bad token", "a bad secret"}},
+  #{status_code := 401,
+        headers := RHeaders2} =
+    lsl_test_utils:api_call(get, "/matches", Headers2),
+  {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeaders2),
+
+  ct:comment("GET with wrong secret fails"),
+  Headers3 = #{basic_auth => {Token, "very bad secret"}},
+  #{status_code := 401,
+        headers := RHeaders3} =
+    lsl_test_utils:api_call(get, "/matches", Headers3),
+  {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeaders3),
+
+  ct:comment("GET with wrong status fails"),
+  Headers = #{basic_auth => {Token, Secret}},
+  #{status_code := 400} =
+    lsl_test_utils:api_call(get, "/matches?status=wrong", Headers),
+
+  #{status_code := 400} =
+    lsl_test_utils:api_call(get, "/matches?status", Headers),
+
+  {comment, ""}.
+
+
+-spec get_matches_ok(lsl_test_utils:config()) -> {comment, []}.
+get_matches_ok(Config) ->
+  {player1, Player1} = lists:keyfind(player1, 1, Config),
+  PlayerId = lsl_players:id(Player1),
+  {session1, SessionA} = lists:keyfind(session1, 1, Config),
+  Token = binary_to_list(lsl_sessions:token(SessionA)),
+  Secret = binary_to_list(lsl_sessions:secret(SessionA)),
+  Headers = #{basic_auth => {Token, Secret}},
+  {player2, Player2} = lists:keyfind(player2, 1, Config),
+  Rival = lsl_players:id(Player2),
+  RivalName = lsl_players:name(Player2),
+  DumbAIName = lsl_ai_dumb:name(),
+
+  ct:comment("GET /matches returns an empty list"),
+  #{status_code := 200,
+           body := EmptyBody} =
+    lsl_test_utils:api_call(get, "/matches", Headers),
+  [] = lsl_json:decode(EmptyBody),
+
+  ct:comment("A match that doesn't include player1 is created"),
+  lsl:start_match(Rival, lsl_ai_dumb, 5),
+
+  ct:comment("GET /matches still returns an empty list"),
+  #{status_code := 200,
+           body := EmptyBody} =
+    lsl_test_utils:api_call(get, "/matches", Headers),
+
+  ct:comment("A match with player1 as player 1 is created"),
+  M1Id = lsl_matches:id(lsl:start_match(PlayerId, lsl_ai_dumb, 3)),
+
+  ct:comment("GET /matches returns that match"),
+  #{status_code := 200,
+           body := Body1} =
+    lsl_test_utils:api_call(get, "/matches", Headers),
+  [ #{ <<"id">> := M1Id
+     , <<"rival">> := #{<<"id">> := <<"lsl_ai_dumb">>, <<"name">> := DumbAIName}
+     , <<"board">> := [ [true]
+                      , [false, false]
+                      , [false, false, false]
+                      ]
+     , <<"current-player">> := PlayerId
+     , <<"status">> := <<"playing">>
+     } = Match1
+  ] = lsl_json:decode(Body1),
+
+  ct:comment("A match with player1 as rival is created"),
+  M2Id = lsl_matches:id(lsl:start_match(Rival, PlayerId, 3)),
+
+  ct:comment("GET /matches returns both matches"),
+  #{status_code := 200,
+           body := Body2} =
+    lsl_test_utils:api_call(get, "/matches", Headers),
+  [ #{ <<"id">> := M2Id
+     , <<"rival">> := #{<<"id">> := Rival, <<"name">> := RivalName}
+     , <<"board">> := [ [false]
+                      , [false, false]
+                      , [false, false, false]
+                      ]
+     , <<"current-player">> := PlayerId
+     , <<"status">> := <<"playing">>
+     }
+  ] = lsl_json:decode(Body2) -- [Match1],
+
+  {comment, ""}.
+
+-spec get_matches_status_ok(lsl_test_utils:config()) -> {comment, []}.
+get_matches_status_ok(_Config) ->
   {comment, ""}.
