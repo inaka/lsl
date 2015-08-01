@@ -171,7 +171,8 @@ post_matches_ok(Config) ->
     #{ basic_auth => {Token, Secret}
      , <<"content-type">> => <<"application/json">>
      },
-  AIName = lsl_ai_dumb:name(),
+  DumbAIName = lsl_ai_dumb:name(),
+  Rodolfo = lsl_ai_rodolfo:name(),
 
   ct:comment("Start a match against another player, default # of rows"),
   ReqBody1 = lsl_json:encode(#{rival => Rival}),
@@ -212,7 +213,7 @@ post_matches_ok(Config) ->
            body := Body3} =
     lsl_test_utils:api_call(post, "/matches", Headers, ReqBody3),
   #{ <<"id">> := Id3
-   , <<"rival">> := #{<<"id">> := <<"lsl_ai_dumb">>, <<"name">> := AIName}
+   , <<"rival">> := #{<<"id">> := <<"lsl_ai_dumb">>, <<"name">> := DumbAIName}
    , <<"board">> := [ [true]
                     , [false, false]
                     , [false, false, false]
@@ -222,12 +223,12 @@ post_matches_ok(Config) ->
    } = lsl_json:decode(Body3),
 
   ct:comment("Start a match against AI player, 2 rows"),
-  ReqBody4 = lsl_json:encode(#{rival => lsl_ai_dumb}),
+  ReqBody4 = lsl_json:encode(#{rival => lsl_ai_rodolfo}),
   #{status_code := 201,
            body := Body4} =
     lsl_test_utils:api_call(post, "/matches", Headers, ReqBody4),
   #{ <<"id">> := Id4
-   , <<"rival">> := #{<<"id">> := <<"lsl_ai_dumb">>, <<"name">> := AIName}
+   , <<"rival">> := #{<<"id">> := <<"lsl_ai_rodolfo">>, <<"name">> := Rodolfo}
    , <<"board">> := [ [true]
                     , [false, false]
                     , [false, false, false]

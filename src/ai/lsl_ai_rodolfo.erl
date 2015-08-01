@@ -20,7 +20,7 @@ play(Match) -> lsl_ai:play(?MODULE, Match).
 
 %% @private
 -spec name() -> binary().
-name() -> <<"DumbAI">>.
+name() -> <<"Rodolfo">>.
 
 %% @private
 -spec next_move(lsl_core:match()) -> lsl_ai:move().
