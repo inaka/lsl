@@ -2,11 +2,12 @@ PROJECT = lsl
 
 CONFIG ?= test/test.config
 
-DEPS = eper mixer lager cowboy jiffy sumo katana erlpass
+DEPS = eper mixer lager cowboy jiffy sumo katana bcrypt erlpass
 SELL_DEPS = sync
 TEST_DEPS = xref_runner shotgun
 
 dep_lager = git https://github.com/basho/lager.git 3.0.1
+dep_bcrypt = git https://github.com/opscode/erlang-bcrypt.git 0.5.0.3
 dep_erlpass = git https://github.com/inaka/erlpass.git 1.0.2
 dep_katana = git https://github.com/inaka/erlang-katana.git 0.2.8
 dep_sumo = git https://github.com/inaka/sumo_db.git 0.3.11
@@ -36,10 +37,13 @@ CT_OPTS += -cover test/${PROJECT}.coverspec -vvv -erl_args -config ${CONFIG}
 
 SHELL_OPTS += -name ${PROJECT}@`hostname` -config ${CONFIG} -boot start_sasl -s lager -s sync -s ${PROJECT}
 
-quicktests: app
-	@$(MAKE) --no-print-directory app-build test-dir ERLC_OPTS="$(TEST_ERLC_OPTS)"
-	@mkdir -p logs/
-	$(gen_verbose) $(CT_RUN) -suite $(addsuffix _SUITE,$(CT_SUITES)) $(CT_OPTS)
+quicktests: app build-ct-suites
+	@if [ -d "test" ] ; \
+	then \
+		mkdir -p logs/ ; \
+		$(CT_RUN) -suite $(addsuffix _SUITE,$(CT_SUITES)) $(CT_OPTS) ; \
+	fi
+	$(gen_verbose) rm -f test/*.beam
 
 erldocs:
 	erldocs . -o docs

@@ -33,10 +33,14 @@ fetch(Id) ->
 %% @doc is this module AI?
 -spec is_ai(module()) -> boolean().
 is_ai(Module) ->
-  Attrs = Module:module_info(attributes),
-  case lists:keyfind(behaviour, 1, Attrs) of
-    false -> notfound;
-    {behaviour, Behaviours} -> lists:member(lsl_ai, Behaviours)
+  try Module:module_info(attributes) of
+    Attrs ->
+      case lists:keyfind(behaviour, 1, Attrs) of
+        false -> false;
+        {behaviour, Behaviours} -> lists:member(lsl_ai, Behaviours)
+      end
+  catch
+    _:undef -> false
   end.
 
 %% @doc Represents the AI player as json
