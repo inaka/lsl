@@ -363,5 +363,47 @@ get_matches_ok(Config) ->
   {comment, ""}.
 
 -spec get_matches_status_ok(lsl_test_utils:config()) -> {comment, []}.
-get_matches_status_ok(_Config) ->
+get_matches_status_ok(Config) ->
+  {player1, Player1} = lists:keyfind(player1, 1, Config),
+  PlayerId = lsl_players:id(Player1),
+  {session1, SessionA} = lists:keyfind(session1, 1, Config),
+  Token = binary_to_list(lsl_sessions:token(SessionA)),
+  Secret = binary_to_list(lsl_sessions:secret(SessionA)),
+  Headers = #{basic_auth => {Token, Secret}},
+  {player2, Player2} = lists:keyfind(player2, 1, Config),
+  Rival = lsl_players:id(Player2),
+
+  ct:comment("Three matches are created"),
+  PlayingId = lsl_matches:id(lsl:start_match(PlayerId, Rival, 3)),
+  WonId = lsl_matches:id(lsl:start_match(PlayerId, Rival, 3)),
+  LostId = lsl_matches:id(lsl:start_match(PlayerId, Rival, 3)),
+  AllIds = lists:sort([PlayingId, WonId, LostId]),
+
+  ct:comment("Player1 wins one, looses 1"),
+  lsl:play(WonId, Rival, 3, 1, 3),
+  lsl:play(WonId, PlayerId, 2, 1, 2),
+  lsl:play(LostId, Rival, 3, 1, 3),
+  lsl:play(LostId, PlayerId, 1, 1, 1),
+  lsl:play(LostId, Rival, 2, 1, 1),
+
+  MatchIds =
+    fun(Status) ->
+      #{status_code := 200,
+               body := Body} =
+        lsl_test_utils:api_call(get, "/matches?status=" ++ Status, Headers),
+      lists:sort([MatchId || #{<<"id">> := MatchId} <- lsl_json:decode(Body)])
+    end,
+
+  ct:comment("GET /matches?status=all returns all of them"),
+  AllIds = MatchIds("all"),
+
+  ct:comment("GET /matches?status=won returns the on that the player won"),
+  [WonId] = MatchIds("won"),
+
+  ct:comment("GET /matches?status=lost returns the on that the player lost"),
+  [LostId] = MatchIds("lost"),
+
+  ct:comment("GET /matches?status=playing returns the on that's still ongoing"),
+  [PlayingId] = MatchIds("playing"),
+
   {comment, ""}.

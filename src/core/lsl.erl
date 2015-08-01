@@ -22,6 +22,7 @@
         , start_match/3
         , fetch_ai/1
         , find_matches/2
+        , play/5
         ]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -122,7 +123,6 @@ fetch_players() -> lsl_players_repo:all().
   [lsl_matches:match()].
 find_matches(Player, Status) -> lsl_matches_repo:find(Player, Status).
 
-
 %% @doc Starts a new match
 -spec start_match(binary(), module()|binary(), pos_integer()) ->
   lsl_matches:match().
@@ -132,3 +132,10 @@ start_match(PlayerId, Rival, Rows) ->
 %% @doc Retrieves an AI module
 -spec fetch_ai(binary()) -> module() | notfound.
 fetch_ai(AIId) -> lsl_ai:fetch(AIId).
+
+%% @doc Makes a move
+-spec play(
+  binary(), binary(), lsl_core:row(), lsl_core:col(), lsl_core:length()) ->
+  lsl_matches:match().
+play(MatchId, PlayerId, Row, Col, Length) ->
+  lsl_matches_repo:play(MatchId, PlayerId, Row, Col, Length).

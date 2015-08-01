@@ -21,7 +21,7 @@
 
 -export([new/4, to_json/2]).
 -export([sumo_schema/0, sumo_wakeup/1, sumo_sleep/1]).
--export([id/1, core/1, core/2]).
+-export([id/1, core/1, core/2, current_player/1, status/2]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEHAVIOUR CALLBACKS
@@ -100,11 +100,7 @@ to_json(Match, CallerId) ->
    , created_at := CreatedAt
    , updated_at := UpdatedAt
    } = Match,
-  CurrentPlayer =
-    case Turn rem 2 of
-      0 -> PlayerId;
-      1 -> Rival
-    end,
+  CurrentPlayer = current_player(Match),
   #{ id => Id
    , rival =>
       case {CallerId, RivalKind} of
@@ -114,9 +110,7 @@ to_json(Match, CallerId) ->
       end
    , board => lsl_core:to_json(Core)
    , 'current-player' => CurrentPlayer
-   , status => atom_to_binary(
-                match_status(
-                  CallerId, CurrentPlayer, lsl_core:last_result(Core)), utf8)
+   , status => atom_to_binary(status(Match, CallerId), utf8)
    , created_at => CreatedAt
    , updated_at => UpdatedAt
    }.
@@ -141,8 +135,18 @@ core(Match, Core) ->
         , updated_at := ktn_date:now_human_readable()
         }.
 
-match_status(_CallerId, _CurrentPlayer, next) -> playing;
-match_status(CallerId,  CallerId,       won) ->  lost;
-match_status(_CallerId, _Rival,         won) ->  won;
-match_status(CallerId,  CallerId,       lost) -> won;
-match_status(_CallerId, _Rival,         lost) -> lost.
+-spec current_player(match()) -> binary().
+current_player(#{turn := Turn, rival := Rival}) when Turn rem 2 == 1 -> Rival;
+current_player(#{player_id := PlayerId}) -> PlayerId.
+
+-spec status(match(), binary()) -> status().
+status(Match, CallerId) ->
+  CurrentPlayer = current_player(Match),
+  Core = core(Match),
+  status(CallerId, CurrentPlayer, lsl_core:last_result(Core)).
+
+status(_CallerId, _CurrentPlayer, next) -> playing;
+status(CallerId,  CallerId,       won) ->  lost;
+status(_CallerId, _Rival,         won) ->  won;
+status(CallerId,  CallerId,       lost) -> won;
+status(_CallerId, _Rival,         lost) -> lost.
