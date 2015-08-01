@@ -56,8 +56,10 @@ start_phase(start_cowboy_listeners, _StartType, []) ->
     [{'_',
       [ {"/status", lsl_status_handler,  []}
       , {"/players", lsl_players_handler, []}
-      , {"/sessions/[:session_token]", lsl_sessions_handler, []}
-      , {"/matches/[:match_id]", lsl_matches_handler, []}
+      , {"/sessions/:session_token", lsl_session_handler, []}
+      , {"/sessions", lsl_sessions_handler, []}
+      , {"/matches/:match_id", lsl_match_handler, []}
+      , {"/matches", lsl_matches_handler, []}
       ]
      }
     ],

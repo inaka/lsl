@@ -221,7 +221,7 @@ post_matches_ok(Config) ->
    , <<"status">> := <<"playing">>
    } = lsl_json:decode(Body3),
 
-  ct:comment("Start a match against another player, 2 rows"),
+  ct:comment("Start a match against AI player, 2 rows"),
   ReqBody4 = lsl_json:encode(#{rival => lsl_ai_dumb}),
   #{status_code := 201,
            body := Body4} =

@@ -139,6 +139,6 @@ core(Match, Core) ->
 
 match_status(_CallerId, _CurrentPlayer, next) -> <<"playing">>;
 match_status(CallerId, CallerId, won) -> <<"lost">>;
-match_status(CallerId, _Rival, won) -> <<"won">>;
+match_status(_CallerId, _Rival, won) -> <<"won">>;
 match_status(CallerId, CallerId, lost) -> <<"won">>;
-match_status(CallerId, _Rival, lost) -> <<"lost">>.
+match_status(_CallerId, _Rival, lost) -> <<"lost">>.
