@@ -1,4 +1,4 @@
-%%% @doc /matches/[:match_id] handler
+%%% @doc /matches handler
 -module(lsl_matches_handler).
 -author('elbrujohalcon@inaka.net').
 

@@ -19,6 +19,7 @@
              , post_matches_ok/1
              , get_matches_wrong/1
              , get_matches_ok/1
+             , get_match_wrong/1
              ]).
 
 -export([ all/0
@@ -30,6 +31,7 @@
         , get_matches_wrong/1
         , get_matches_ok/1
         , get_matches_status_ok/1
+        , get_match_wrong/1
         ]).
 
 -spec all() -> [atom()].
@@ -296,7 +298,6 @@ get_matches_wrong(Config) ->
 
   {comment, ""}.
 
-
 -spec get_matches_ok(lsl_test_utils:config()) -> {comment, []}.
 get_matches_ok(Config) ->
   {player1, Player1} = lists:keyfind(player1, 1, Config),
@@ -405,5 +406,57 @@ get_matches_status_ok(Config) ->
 
   ct:comment("GET /matches?status=playing returns the on that's still ongoing"),
   [PlayingId] = MatchIds("playing"),
+
+  {comment, ""}.
+
+-spec get_match_wrong(lsl_test_utils:config()) -> {comment, []}.
+get_match_wrong(Config) ->
+  {player1, Player1} = lists:keyfind(player1, 1, Config),
+  Name = binary_to_list(lsl_players:name(Player1)),
+  {session1, SessionA} = lists:keyfind(session1, 1, Config),
+  Token = binary_to_list(lsl_sessions:token(SessionA)),
+  Secret = binary_to_list(lsl_sessions:secret(SessionA)),
+  {player2, Player2} = lists:keyfind(player2, 1, Config),
+  Rival = lsl_players:id(Player2),
+
+  ct:comment("GET without auth fails"),
+  #{status_code := 401,
+        headers := RHeaders0} = lsl_test_utils:api_call(get, "/matches/id"),
+  {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeaders0),
+
+  ct:comment("GET with usr/pwd fails"),
+  Headers1 = #{basic_auth => {Name, "pwd"}},
+  #{status_code := 401,
+        headers := RHeaders1} =
+    lsl_test_utils:api_call(get, "/matches/id", Headers1),
+  {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeaders1),
+
+  ct:comment("GET with wrong token/secret fails"),
+  Headers2 = #{basic_auth => {"a bad token", "a bad secret"}},
+  #{status_code := 401,
+        headers := RHeaders2} =
+    lsl_test_utils:api_call(get, "/matches/id", Headers2),
+  {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeaders2),
+
+  ct:comment("GET with wrong secret fails"),
+  Headers3 = #{basic_auth => {Token, "very bad secret"}},
+  #{status_code := 401,
+        headers := RHeaders3} =
+    lsl_test_utils:api_call(get, "/matches/id", Headers3),
+  {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeaders3),
+
+  ct:comment("GET with wrong match fails"),
+  Headers = #{basic_auth => {Token, Secret}},
+  #{status_code := 404} =
+    lsl_test_utils:api_call(get, "/matches/wrong-id", Headers),
+
+  ForbiddenId = lsl_matches:id(lsl:start_match(Rival, lsl_ai_dumb, 5)),
+
+  #{status_code := 403} =
+    lsl_test_utils:api_call(get, <<"/matches/", ForbiddenId/binary>>, Headers),
 
   {comment, ""}.

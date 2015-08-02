@@ -21,7 +21,7 @@
 
 -export([new/4, to_json/2]).
 -export([sumo_schema/0, sumo_wakeup/1, sumo_sleep/1]).
--export([id/1, core/1, core/2, current_player/1, status/2]).
+-export([id/1, core/1, core/2, current_player/1, status/2, players/1]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEHAVIOUR CALLBACKS
@@ -96,7 +96,6 @@ to_json(Match, CallerId) ->
    , rival_kind := RivalKind
    , rival      := Rival
    , core       := Core
-   , turn       := Turn
    , created_at := CreatedAt
    , updated_at := UpdatedAt
    } = Match,
@@ -150,3 +149,7 @@ status(CallerId,  CallerId,       won) ->  lost;
 status(_CallerId, _Rival,         won) ->  won;
 status(CallerId,  CallerId,       lost) -> won;
 status(_CallerId, _Rival,         lost) -> lost.
+
+%% @doc match players
+-spec players(match()) -> [binary(),...].
+players(#{player_id := PlayerId, rival := Rival}) -> [PlayerId, Rival].

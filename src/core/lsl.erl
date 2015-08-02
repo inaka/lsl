@@ -22,7 +22,10 @@
         , start_match/3
         , fetch_ai/1
         , find_matches/2
+        , fetch_match/1
+        , is_match/1
         , play/5
+        , is_playing/2
         ]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -123,6 +126,10 @@ fetch_players() -> lsl_players_repo:all().
   [lsl_matches:match()].
 find_matches(Player, Status) -> lsl_matches_repo:find(Player, Status).
 
+%% @doc Retrieves a match
+-spec fetch_match(binary()) -> notfound | lsl_matches:match().
+fetch_match(MatchId) -> lsl_matches_repo:fetch(MatchId).
+
 %% @doc Starts a new match
 -spec start_match(binary(), module()|binary(), pos_integer()) ->
   lsl_matches:match().
@@ -133,9 +140,17 @@ start_match(PlayerId, Rival, Rows) ->
 -spec fetch_ai(binary()) -> module() | notfound.
 fetch_ai(AIId) -> lsl_ai:fetch(AIId).
 
+%% @doc Is this a valid match id?
+-spec is_match(binary()) -> boolean().
+is_match(MatchId) -> lsl_matches_repo:is_match(MatchId).
+
 %% @doc Makes a move
 -spec play(
   binary(), binary(), lsl_core:row(), lsl_core:col(), lsl_core:length()) ->
   lsl_matches:match().
 play(MatchId, PlayerId, Row, Col, Length) ->
   lsl_matches_repo:play(MatchId, PlayerId, Row, Col, Length).
+
+%% @doc Is the player playing that game
+-spec is_playing(binary(), binary()) -> boolean().
+is_playing(MatchId, PlayerId) -> lsl_matches_repo:is_playing(MatchId, PlayerId).
