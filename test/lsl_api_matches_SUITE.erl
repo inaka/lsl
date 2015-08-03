@@ -32,6 +32,7 @@
         , get_matches_ok/1
         , get_matches_status_ok/1
         , get_match_wrong/1
+        , get_match_ok/1
         ]).
 
 -spec all() -> [atom()].
@@ -454,9 +455,57 @@ get_match_wrong(Config) ->
   #{status_code := 404} =
     lsl_test_utils:api_call(get, "/matches/wrong-id", Headers),
 
-  ForbiddenId = lsl_matches:id(lsl:start_match(Rival, lsl_ai_dumb, 5)),
+  ForbiddenId =
+    binary_to_list(lsl_matches:id(lsl:start_match(Rival, lsl_ai_dumb, 5))),
 
   #{status_code := 403} =
-    lsl_test_utils:api_call(get, <<"/matches/", ForbiddenId/binary>>, Headers),
+    lsl_test_utils:api_call(get, "/matches/" ++ ForbiddenId, Headers),
+
+  {comment, ""}.
+
+-spec get_match_ok(lsl_test_utils:config()) -> {comment, []}.
+get_match_ok(Config) ->
+  {player1, Player1} = lists:keyfind(player1, 1, Config),
+  PlayerId = lsl_players:id(Player1),
+  {session1, SessionA} = lists:keyfind(session1, 1, Config),
+  Token = binary_to_list(lsl_sessions:token(SessionA)),
+  Secret = binary_to_list(lsl_sessions:secret(SessionA)),
+  Headers = #{basic_auth => {Token, Secret}},
+  {player2, Player2} = lists:keyfind(player2, 1, Config),
+  Rival = lsl_players:id(Player2),
+  RivalName = lsl_players:name(Player2),
+  DumbAIName = lsl_ai_dumb:name(),
+
+  ct:comment("Matches are created"),
+  P1MId = lsl_matches:id(lsl:start_match(PlayerId, lsl_ai_dumb, 3)),
+  RivMId = lsl_matches:id(lsl:start_match(Rival, PlayerId, 3)),
+
+  ct:comment("GET /matches/:mid returns all matches"),
+  #{status_code := 200,
+           body := Body1} =
+    lsl_test_utils:api_call(get, "/matches/" ++ binary_to_list(P1MId), Headers),
+  #{ <<"id">> := P1MId
+   , <<"rival">> := #{<<"id">> := <<"lsl_ai_dumb">>, <<"name">> := DumbAIName}
+   , <<"board">> := [ [true]
+                    , [false, false]
+                    , [false, false, false]
+                    ]
+   , <<"current-player">> := PlayerId
+   , <<"status">> := <<"playing">>
+   } = lsl_json:decode(Body1),
+
+  #{status_code := 200,
+           body := Body2} =
+    lsl_test_utils:api_call(
+      get, "/matches/" ++ binary_to_list(RivMId), Headers),
+  #{ <<"id">> := RivMId
+   , <<"rival">> := #{<<"id">> := Rival, <<"name">> := RivalName}
+   , <<"board">> := [ [false]
+                    , [false, false]
+                    , [false, false, false]
+                    ]
+   , <<"current-player">> := PlayerId
+   , <<"status">> := <<"playing">>
+   } = lsl_json:decode(Body2),
 
   {comment, ""}.
