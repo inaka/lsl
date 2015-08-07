@@ -47,8 +47,13 @@ is_authorized(Req, State) ->
   is_authorized([session], Req, State).
 
 content_types_accepted(Req, State) ->
-  ContentTypes = [{{<<"application">>, <<"json">>, '*'}, handle_post}],
-  {ContentTypes, Req, State}.
+  {Handler, Req1} =
+    case cowboy_req:method(Req) of
+      {<<"POST">>, Req0} -> {handle_post, Req0};
+      {<<"PATCH">>, Req0} -> {handle_patch, Req0}
+    end,
+  ContentTypes = [{{<<"application">>, <<"json">>, '*'}, Handler}],
+  {ContentTypes, Req1, State}.
 
 content_types_provided(Req, State) ->
   {[{<<"application/json">>, handle_get}], Req, State}.

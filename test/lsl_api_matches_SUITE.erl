@@ -33,6 +33,7 @@
         , get_matches_status_ok/1
         , get_match_wrong/1
         , get_match_ok/1
+        , patch_match_wrong/1
         ]).
 
 -spec all() -> [atom()].
@@ -507,5 +508,121 @@ get_match_ok(Config) ->
    , <<"current-player">> := PlayerId
    , <<"status">> := <<"playing">>
    } = lsl_json:decode(Body2),
+
+  {comment, ""}.
+
+-spec patch_match_wrong(lsl_test_utils:config()) -> {comment, []}.
+patch_match_wrong(Config) ->
+  {player1, Player1} = lists:keyfind(player1, 1, Config),
+  Name = binary_to_list(lsl_players:name(Player1)),
+  PlayerId = lsl_players:id(Player1),
+  {session1, SessionA} = lists:keyfind(session1, 1, Config),
+  Token = binary_to_list(lsl_sessions:token(SessionA)),
+  Secret = binary_to_list(lsl_sessions:secret(SessionA)),
+  {player2, Player2} = lists:keyfind(player2, 1, Config),
+  Rival = lsl_players:id(Player2),
+
+  ct:comment("PATCH without auth fails"),
+  #{status_code := 401,
+        headers := RHeaders0} = lsl_test_utils:api_call(patch, "/matches/id"),
+  {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeaders0),
+
+  ct:comment("PATCH with usr/pwd fails"),
+  Headers1 = #{basic_auth => {Name, "pwd"}},
+  #{status_code := 401,
+        headers := RHeaders1} =
+    lsl_test_utils:api_call(patch, "/matches/id", Headers1),
+  {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeaders1),
+
+  ct:comment("PATCH with wrong token/secret fails"),
+  Headers2 = #{basic_auth => {"a bad token", "a bad secret"}},
+  #{status_code := 401,
+        headers := RHeaders2} =
+    lsl_test_utils:api_call(patch, "/matches/id", Headers2),
+  {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeaders2),
+
+  ct:comment("PATCH with wrong secret fails"),
+  Headers3 = #{basic_auth => {Token, "very bad secret"}},
+  #{status_code := 401,
+        headers := RHeaders3} =
+    lsl_test_utils:api_call(patch, "/matches/id", Headers3),
+  {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeaders3),
+
+  ct:comment("PATCH without content-type fails"),
+  MatchId =
+    binary_to_list(lsl_matches:id(lsl:start_match(Rival, PlayerId, 3))),
+  MatchUrl = "/matches/" ++ MatchId,
+
+  Headers4 = #{basic_auth => {Token, Secret}},
+  #{status_code := 415} = lsl_test_utils:api_call(patch, MatchUrl, Headers4),
+
+  ct:comment("Something that's not json fails as well"),
+  Headers5 = Headers4#{<<"content-type">> => <<"text/plain">>},
+  #{status_code := 415} = lsl_test_utils:api_call(patch, MatchUrl, Headers5),
+
+  ct:comment("Even with the right type"),
+  Headers = Headers4#{<<"content-type">> => <<"application/json">>},
+  #{status_code := 400} = lsl_test_utils:api_call(patch, MatchUrl, Headers),
+
+  ct:comment("Broken json fails"),
+  #{status_code := 400,
+           body := Body0} =
+    lsl_test_utils:api_call(patch, MatchUrl, Headers, "{"),
+  #{<<"error">> := <<"invalid json">>} = lsl_json:decode(Body0),
+
+  ct:comment("No row fails"),
+  #{status_code := 400,
+           body := Body00} =
+    lsl_test_utils:api_call(patch, MatchUrl, Headers, "{}"),
+  #{<<"error">> := <<"missing field: row">>} = lsl_json:decode(Body00),
+
+  ct:comment("No col fails"),
+  ReqBody1 = lsl_json:encode(#{row => 1}),
+  #{status_code := 400,
+           body := Body1} =
+    lsl_test_utils:api_call(patch, MatchUrl, Headers, ReqBody1),
+  #{<<"error">> := <<"missing field: col">>} = lsl_json:decode(Body1),
+
+  ct:comment("No length fails"),
+  ReqBody2 = lsl_json:encode(#{row => 1, col => 1}),
+  #{status_code := 400,
+           body := Body2} =
+    lsl_test_utils:api_call(patch, MatchUrl, Headers, ReqBody2),
+  #{<<"error">> := <<"missing field: length">>} = lsl_json:decode(Body2),
+
+  ct:comment("Invalid row fails"),
+  ReqBody3 = lsl_json:encode(#{col => 1, row => false, length => 1}),
+  #{status_code := 400,
+           body := Body3} =
+    lsl_test_utils:api_call(patch, MatchUrl, Headers, ReqBody3),
+  #{<<"error">> := <<"invalid field: row">>} = lsl_json:decode(Body3),
+
+  ReqBody4 = lsl_json:encode(#{col => 1, row => 20, length => 1}),
+  #{status_code := 400,
+           body := Body4} =
+    lsl_test_utils:api_call(patch, MatchUrl, Headers, ReqBody4),
+  #{<<"error">> := <<"out of bounds">>} = lsl_json:decode(Body4),
+
+  ct:comment("PATCH with wrong match fails"),
+  #{status_code := 404} =
+    lsl_test_utils:api_call(patch, "/matches/wrong-id", Headers),
+
+  ct:comment("PATCH with not your match fails"),
+  ForbiddenId =
+    binary_to_list(lsl_matches:id(lsl:start_match(Rival, lsl_ai_dumb, 5))),
+
+  #{status_code := 403} =
+    lsl_test_utils:api_call(patch, "/matches/" ++ ForbiddenId, Headers),
+
+  ct:comment("PATCH when not your turn fails"),
+  NotYourTurnId =
+    binary_to_list(lsl_matches:id(lsl:start_match(PlayerId, Rival, 3))),
+
+  #{status_code := 403} =
+    lsl_test_utils:api_call(patch, "/matches/" ++ NotYourTurnId, Headers),
 
   {comment, ""}.

@@ -8,6 +8,7 @@
         , play/5
         , is_match/1
         , is_playing/2
+        , is_current_player/2
         ]).
 
 %% @doc Starts a match.
@@ -65,4 +66,12 @@ is_playing(MatchId, PlayerId) ->
   case sumo:find(lsl_matches, MatchId) of
     notfound -> false;
     Match -> lists:member(PlayerId, lsl_matches:players(Match))
+  end.
+
+%% @doc Is the player the current player for that game
+-spec is_current_player(binary(), binary()) -> boolean().
+is_current_player(MatchId, PlayerId) ->
+  case sumo:find(lsl_matches, MatchId) of
+    notfound -> false;
+    Match -> PlayerId == lsl_matches:current_player(Match)
   end.

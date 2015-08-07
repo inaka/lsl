@@ -17,6 +17,7 @@
         , forbidden/2
         , resource_exists/2
         , handle_get/2
+        , handle_patch/2
         ]).
 
 -type state() :: lsl_base_handler:state().
@@ -39,7 +40,7 @@
 -spec allowed_methods(cowboy_req:req(), state()) ->
   {[binary()], cowboy_req:req(), state()}.
 allowed_methods(Req, State) ->
-  {[<<"GET">>], Req, State}.
+  {[<<"GET">>, <<"PATCH">>], Req, State}.
 
 -spec resource_exists(cowboy_req:req(), term()) ->
   {boolean(), cowboy_req:req(), term()}.
@@ -53,8 +54,35 @@ forbidden(Req, State) ->
   {MatchId, Req1} = cowboy_req:binding(match_id, Req),
   #{player := Player} = State,
   PlayerId = lsl_players:id(Player),
-  Forbidden = lsl:is_match(MatchId) and not lsl:is_playing(MatchId, PlayerId),
-  {Forbidden, Req1, State#{binding => MatchId}}.
+  {Forbidden, Req2} =
+    case cowboy_req:method(Req) of
+      {<<"GET">>, NewReq} ->
+        { lsl:is_match(MatchId) and not lsl:is_playing(MatchId, PlayerId)
+        , NewReq
+        };
+      {<<"PATCH">>, NewReq} ->
+        { lsl:is_match(MatchId) and not lsl:is_current_player(MatchId, PlayerId)
+        , NewReq
+        }
+    end,
+  {Forbidden, Req2, State#{binding => MatchId}}.
+
+-spec handle_patch(cowboy_req:req(), state()) ->
+    {halt | {boolean(), binary()}, cowboy_req:req(), state()}.
+handle_patch(Req, State) ->
+  try
+    #{player := Player, binding := MatchId} = State,
+    PlayerId = lsl_players:id(Player),
+    {ok, Body, Req1} = cowboy_req:body(Req),
+    {Row, Col, Length} = parse_body(Body),
+    Match = lsl:play(MatchId, PlayerId, Row, Col, Length),
+    RespBody = lsl_json:encode(lsl_matches:to_json(Match, PlayerId)),
+    Req2 = cowboy_req:set_resp_body(RespBody, Req1),
+    {{true, <<"/matches/", MatchId/binary>>}, Req2, State}
+  catch
+    _:Exception ->
+      lsl_web_utils:handle_exception(Exception, Req, State)
+  end.
 
 -spec handle_get(cowboy_req:req(), state()) ->
   {iodata(), cowboy_req:req(), state()}.
@@ -68,4 +96,19 @@ handle_get(Req, State) ->
   catch
     _:Exception ->
       lsl_web_utils:handle_exception(Exception, Req, State)
+  end.
+
+parse_body(Body) ->
+  Json = lsl_json:decode(Body),
+  case { maps:get(<<"row">>,    Json, null)
+       , maps:get(<<"col">>,    Json, null)
+       , maps:get(<<"length">>, Json, null)
+       } of
+    {null, _, _} -> throw({missing_field, <<"row">>});
+    {_, null, _} -> throw({missing_field, <<"col">>});
+    {_, _, null} -> throw({missing_field, <<"length">>});
+    {Row, _, _} when not is_integer(Row) -> throw({invalid_field, <<"row">>});
+    {_, Col, _} when not is_integer(Col) -> throw({invalid_field, <<"col">>});
+    {_, _, Len} when not is_integer(Len) ->throw({invalid_field, <<"length">>});
+    {Row, Col, Len} -> {Row, Col, Len}
   end.

@@ -26,6 +26,7 @@
         , is_match/1
         , play/5
         , is_playing/2
+        , is_current_player/2
         ]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -154,3 +155,8 @@ play(MatchId, PlayerId, Row, Col, Length) ->
 %% @doc Is the player playing that game
 -spec is_playing(binary(), binary()) -> boolean().
 is_playing(MatchId, PlayerId) -> lsl_matches_repo:is_playing(MatchId, PlayerId).
+
+%% @doc Is the player the current player for that game
+-spec is_current_player(binary(), binary()) -> boolean().
+is_current_player(MatchId, PlayerId) ->
+  lsl_matches_repo:is_current_player(MatchId, PlayerId).
