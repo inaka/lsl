@@ -78,7 +78,7 @@ handle_patch(Req, State) ->
     Match = lsl:play(MatchId, PlayerId, Row, Col, Length),
     RespBody = lsl_json:encode(lsl_matches:to_json(Match, PlayerId)),
     Req2 = cowboy_req:set_resp_body(RespBody, Req1),
-    {{true, <<"/matches/", MatchId/binary>>}, Req2, State}
+    {true, Req2, State}
   catch
     _:Exception ->
       lsl_web_utils:handle_exception(Exception, Req, State)

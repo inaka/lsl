@@ -34,6 +34,7 @@
         , get_match_wrong/1
         , get_match_ok/1
         , patch_match_wrong/1
+        , patch_match_ok/1
         ]).
 
 -spec all() -> [atom()].
@@ -624,5 +625,59 @@ patch_match_wrong(Config) ->
 
   #{status_code := 403} =
     lsl_test_utils:api_call(patch, "/matches/" ++ NotYourTurnId, Headers),
+
+  {comment, ""}.
+
+-spec patch_match_ok(lsl_test_utils:config()) -> {comment, []}.
+patch_match_ok(Config) ->
+  {player1, Player1} = lists:keyfind(player1, 1, Config),
+  PlayerId = lsl_players:id(Player1),
+  {session1, SessionA} = lists:keyfind(session1, 1, Config),
+  Token = binary_to_list(lsl_sessions:token(SessionA)),
+  Secret = binary_to_list(lsl_sessions:secret(SessionA)),
+  {player2, Player2} = lists:keyfind(player2, 1, Config),
+  Rival = lsl_players:id(Player2),
+  RivalName = lsl_players:name(Player2),
+  Headers =
+    #{ basic_auth => {Token, Secret}
+     , <<"content-type">> => <<"application/json">>
+     },
+  DumbAIName = lsl_ai_dumb:name(),
+
+  MatchId = lsl_matches:id(lsl:start_match(Rival, PlayerId, 3)),
+  MatchUrl = "/matches/" ++ binary_to_list(MatchId),
+
+  AIMatchId = lsl_matches:id(lsl:start_match(PlayerId, lsl_ai_dumb, 3)),
+  AIMatchUrl = "/matches/" ++ binary_to_list(AIMatchId),
+
+  ct:comment("PATCHing a game actually crosses the sticks"),
+  ReqBody1 = lsl_json:encode(#{row => 3, col => 2, length => 2}),
+  #{status_code := 200,
+           body := Body1} =
+    lsl_test_utils:api_call(patch, MatchUrl, Headers, ReqBody1),
+  #{ <<"id">> := MatchId
+   , <<"rival">> := #{<<"id">> := Rival, <<"name">> := RivalName}
+   , <<"board">> := [ [false]
+                    , [false, false]
+                    , [false, true, true]
+                    ]
+   , <<"current-player">> := Rival
+   , <<"status">> := <<"playing">>
+   } = lsl_json:decode(Body1),
+
+  ct:comment("AI plays automatically"),
+  ReqBody2 = lsl_json:encode(#{row => 2, col => 1, length => 2}),
+  #{status_code := 200,
+           body := Body2} =
+    lsl_test_utils:api_call(patch, AIMatchUrl, Headers, ReqBody2),
+  #{ <<"id">> := AIMatchId
+   , <<"rival">> := #{<<"id">> := <<"lsl_ai_dumb">>, <<"name">> := DumbAIName}
+   , <<"board">> := [ [true]
+                    , [true, true]
+                    , [true, false, false]
+                    ]
+   , <<"current-player">> := PlayerId
+   , <<"status">> := <<"playing">>
+   } = lsl_json:decode(Body2),
 
   {comment, ""}.
