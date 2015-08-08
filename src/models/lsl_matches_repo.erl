@@ -49,12 +49,26 @@ play(MatchId, PlayerId, Row, Col, Length) ->
     notfound -> throw(notfound);
     Match ->
       case lsl_matches:current_player(Match) of
-        PlayerId ->
-          {_, Core} = lsl_core:cross(Row, Col, Length, lsl_matches:core(Match)),
-          sumo:persist(lsl_matches, lsl_matches:core(Match, Core));
+        PlayerId -> do_play(Match, PlayerId, Row, Col, Length);
         _ -> throw(invalid_player)
       end
   end.
+do_play(Match, PlayerId, Row, Col, Length) ->
+  NewCore =
+    case lsl_core:cross(Row, Col, Length, lsl_matches:core(Match)) of
+      {lost, Core} -> Core;
+      {_, Core} ->
+        case lsl_matches:rival_kind(Match) of
+          player -> Core;
+          ai ->
+            ct:pal("before: ~p", [lsl_matches:current_player(lsl_matches:core(Match, Core))]),
+            {_, Core2} = lsl_ai:play(lsl_matches:rival(Match), Core),
+            ct:pal("after: ~p", [lsl_matches:current_player(lsl_matches:core(Match, Core))]),
+            Core2
+        end
+    end,
+  sumo:persist(lsl_matches, lsl_matches:core(Match, NewCore)).
+
 
 %% @doc Is this a valid match id?
 -spec is_match(binary()) -> boolean().

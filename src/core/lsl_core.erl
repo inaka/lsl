@@ -25,7 +25,7 @@
 -export_type([cross_result/0]).
 
 -export([new/1, rows/1, snapshot/1]).
--export([cross/4, undo/1, last_result/1]).
+-export([cross/4, undo/1, last_result/1, turns/1]).
 -export([print/1, to_json/1]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -78,6 +78,11 @@ undo(_Match) -> throw(no_history).
 -spec last_result(match()) -> cross_result().
 last_result(#{board := Board}) ->
   cross_result(Board).
+
+%% @doc How many turns have been played.
+%%      In other words, the length of the history
+-spec turns(match()) -> non_neg_integer().
+turns(#{history := History}) -> length(History).
 
 %% @doc returns a printable version of the board
 -spec print(match()) -> iodata().

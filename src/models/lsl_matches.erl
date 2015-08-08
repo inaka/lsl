@@ -10,7 +10,6 @@
    , rival_kind => player | ai
    , rival => atom() | binary()
    , core => lsl_core:match()
-   , turn => pos_integer()
    , created_at => dcn_datetime:datetime()
    , updated_at => dcn_datetime:datetime()
    }.
@@ -21,7 +20,15 @@
 
 -export([new/4, to_json/2]).
 -export([sumo_schema/0, sumo_wakeup/1, sumo_sleep/1]).
--export([id/1, core/1, core/2, current_player/1, status/2, players/1]).
+-export([ id/1
+        , core/1
+        , core/2
+        , current_player/1
+        , status/2
+        , players/1
+        , rival_kind/1
+        , rival/1
+        ]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEHAVIOUR CALLBACKS
@@ -35,7 +42,6 @@ sumo_schema() ->
     , sumo:new_field(rival_kind,      binary,   [not_null])
     , sumo:new_field(rival,           binary,   [not_null])
     , sumo:new_field(core,            binary,   [not_null])
-    , sumo:new_field(turn,            integer,  [not_null])
     , sumo:new_field(created_at,      datetime, [not_null])
     , sumo:new_field(updated_at,      datetime, [not_null])
     ]).
@@ -83,7 +89,6 @@ new(PlayerId, RivalKind, Rival, Core) ->
    , rival_kind => RivalKind
    , rival      => Rival
    , core       => Core
-   , turn       => 1
    , created_at => Now
    , updated_at => Now
    }.
@@ -125,18 +130,19 @@ id(#{id := Id}) -> Id.
 -spec core(match()) -> lsl_core:match().
 core(#{core := Core}) -> Core.
 
-%% @doc updates the match core, updated_at and turn #
+%% @doc updates the match core, updated_at
 -spec core(match(), lsl_core:match()) -> match().
 core(Match, Core) ->
-  #{turn := Turn} = Match,
-  Match#{ turn := Turn + 1
-        , core := Core
+  Match#{ core := Core
         , updated_at := ktn_date:now_human_readable()
         }.
 
 -spec current_player(match()) -> binary().
-current_player(#{turn := Turn, rival := Rival}) when Turn rem 2 == 1 -> Rival;
-current_player(#{player_id := PlayerId}) -> PlayerId.
+current_player(#{core := Core, rival := Rival, player_id := PlayerId}) ->
+  case lsl_core:turns(Core) of
+    Turns when Turns rem 2 == 0 -> Rival;
+    _ -> PlayerId
+  end.
 
 -spec status(match(), binary()) -> status().
 status(Match, CallerId) ->
@@ -153,3 +159,11 @@ status(_CallerId, _Rival,         lost) -> lost.
 %% @doc match players
 -spec players(match()) -> [binary(),...].
 players(#{player_id := PlayerId, rival := Rival}) -> [PlayerId, Rival].
+
+%% @doc is it a match against AI or another player?
+-spec rival_kind(match()) -> player | ai.
+rival_kind(#{rival_kind := RivalKind}) -> RivalKind.
+
+%% @doc is it a match against AI or another player?
+-spec rival(match()) -> atom() | binary().
+rival(#{rival := Rival}) -> Rival.
