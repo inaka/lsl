@@ -9,6 +9,7 @@
         , is_match/1
         , is_playing/2
         , is_current_player/2
+        , stop/1
         ]).
 
 %% @doc Starts a match.
@@ -61,9 +62,7 @@ do_play(Match, PlayerId, Row, Col, Length) ->
         case lsl_matches:rival_kind(Match) of
           player -> Core;
           ai ->
-            ct:pal("before: ~p", [lsl_matches:current_player(lsl_matches:core(Match, Core))]),
             {_, Core2} = lsl_ai:play(lsl_matches:rival(Match), Core),
-            ct:pal("after: ~p", [lsl_matches:current_player(lsl_matches:core(Match, Core))]),
             Core2
         end
     end,
@@ -89,3 +88,7 @@ is_current_player(MatchId, PlayerId) ->
     notfound -> false;
     Match -> PlayerId == lsl_matches:current_player(Match)
   end.
+
+%% @doc Deletes a match
+-spec stop(binary()) -> boolean().
+stop(MatchId) -> sumo:delete(lsl_matches, MatchId).

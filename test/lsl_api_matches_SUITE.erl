@@ -35,6 +35,8 @@
         , get_match_ok/1
         , patch_match_wrong/1
         , patch_match_ok/1
+        , delete_match_wrong/1
+        , delete_match_ok/1
         ]).
 
 -spec all() -> [atom()].
@@ -679,5 +681,92 @@ patch_match_ok(Config) ->
    , <<"current-player">> := PlayerId
    , <<"status">> := <<"playing">>
    } = lsl_json:decode(Body2),
+
+  {comment, ""}.
+
+-spec delete_match_wrong(lsl_test_utils:config()) -> {comment, []}.
+delete_match_wrong(Config) ->
+  {player1, Player1} = lists:keyfind(player1, 1, Config),
+  Name = binary_to_list(lsl_players:name(Player1)),
+  {session1, SessionA} = lists:keyfind(session1, 1, Config),
+  Token = binary_to_list(lsl_sessions:token(SessionA)),
+  Secret = binary_to_list(lsl_sessions:secret(SessionA)),
+  {player2, Player2} = lists:keyfind(player2, 1, Config),
+  Rival = lsl_players:id(Player2),
+
+  ct:comment("DELETE without auth fails"),
+  #{status_code := 401,
+        headers := RHeaders0} = lsl_test_utils:api_call(delete, "/matches/id"),
+  {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeaders0),
+
+  ct:comment("DELETE with usr/pwd fails"),
+  Headers1 = #{basic_auth => {Name, "pwd"}},
+  #{status_code := 401,
+        headers := RHeaders1} =
+    lsl_test_utils:api_call(delete, "/matches/id", Headers1),
+  {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeaders1),
+
+  ct:comment("DELETE with wrong token/secret fails"),
+  Headers2 = #{basic_auth => {"a bad token", "a bad secret"}},
+  #{status_code := 401,
+        headers := RHeaders2} =
+    lsl_test_utils:api_call(delete, "/matches/id", Headers2),
+  {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeaders2),
+
+  ct:comment("DELETE with wrong secret fails"),
+  Headers3 = #{basic_auth => {Token, "very bad secret"}},
+  #{status_code := 401,
+        headers := RHeaders3} =
+    lsl_test_utils:api_call(delete, "/matches/id", Headers3),
+  {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeaders3),
+
+  ct:comment("DELETE with wrong match fails"),
+  Headers = #{basic_auth => {Token, Secret}},
+
+  #{status_code := 404} =
+    lsl_test_utils:api_call(delete, "/matches/wrong-id", Headers),
+
+  ForbiddenId =
+    binary_to_list(lsl_matches:id(lsl:start_match(Rival, lsl_ai_dumb, 5))),
+
+  #{status_code := 403} =
+    lsl_test_utils:api_call(delete, "/matches/" ++ ForbiddenId, Headers),
+
+  {comment, ""}.
+
+-spec delete_match_ok(lsl_test_utils:config()) -> {comment, []}.
+delete_match_ok(Config) ->
+  {player1, Player1} = lists:keyfind(player1, 1, Config),
+  PlayerId = lsl_players:id(Player1),
+  {session1, SessionA} = lists:keyfind(session1, 1, Config),
+  Token = binary_to_list(lsl_sessions:token(SessionA)),
+  Secret = binary_to_list(lsl_sessions:secret(SessionA)),
+  Headers = #{basic_auth => {Token, Secret}},
+  {player2, Player2} = lists:keyfind(player2, 1, Config),
+  Rival = lsl_players:id(Player2),
+
+  ct:comment("Matches are created"),
+  P1MId = lsl_matches:id(lsl:start_match(PlayerId, lsl_ai_dumb, 3)),
+  P1Url = "/matches/" ++ binary_to_list(P1MId),
+  RivMId = lsl_matches:id(lsl:start_match(Rival, PlayerId, 3)),
+  RivUrl = "/matches/" ++ binary_to_list(RivMId),
+
+  ct:comment("DELETE /matches/:mid deletes the match"),
+  true = lsl:is_match(P1MId),
+  #{status_code := 204} = lsl_test_utils:api_call(delete, P1Url, Headers),
+  ktn_task:wait_for(fun() -> lsl:is_match(P1MId) end, false),
+
+  #{status_code := 404} = lsl_test_utils:api_call(delete, P1Url, Headers),
+
+  ct:comment("and it works with other players as well"),
+  true = lsl:is_match(RivMId),
+  #{status_code := 204} = lsl_test_utils:api_call(delete, RivUrl, Headers),
+  ktn_task:wait_for(fun() -> lsl:is_match(P1MId) end, false),
+
+  #{status_code := 404} = lsl_test_utils:api_call(delete, RivUrl, Headers),
 
   {comment, ""}.

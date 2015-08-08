@@ -27,6 +27,7 @@
         , play/5
         , is_playing/2
         , is_current_player/2
+        , stop_match/1
         ]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -160,3 +161,7 @@ is_playing(MatchId, PlayerId) -> lsl_matches_repo:is_playing(MatchId, PlayerId).
 -spec is_current_player(binary(), binary()) -> boolean().
 is_current_player(MatchId, PlayerId) ->
   lsl_matches_repo:is_current_player(MatchId, PlayerId).
+
+%% @doc Deletes a match
+-spec stop_match(binary()) -> boolean().
+stop_match(MatchId) -> lsl_matches_repo:stop(MatchId).

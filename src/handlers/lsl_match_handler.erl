@@ -18,6 +18,7 @@
         , resource_exists/2
         , handle_get/2
         , handle_patch/2
+        , delete_resource/2
         ]).
 
 -type state() :: lsl_base_handler:state().
@@ -40,7 +41,7 @@
 -spec allowed_methods(cowboy_req:req(), state()) ->
   {[binary()], cowboy_req:req(), state()}.
 allowed_methods(Req, State) ->
-  {[<<"GET">>, <<"PATCH">>], Req, State}.
+  {[<<"GET">>, <<"PATCH">>, <<"DELETE">>], Req, State}.
 
 -spec resource_exists(cowboy_req:req(), term()) ->
   {boolean(), cowboy_req:req(), term()}.
@@ -55,13 +56,13 @@ forbidden(Req, State) ->
   #{player := Player} = State,
   PlayerId = lsl_players:id(Player),
   {Forbidden, Req2} =
-    case cowboy_req:method(Req) of
-      {<<"GET">>, NewReq} ->
-        { lsl:is_match(MatchId) and not lsl:is_playing(MatchId, PlayerId)
-        , NewReq
-        };
+    case cowboy_req:method(Req1) of
       {<<"PATCH">>, NewReq} ->
         { lsl:is_match(MatchId) and not lsl:is_current_player(MatchId, PlayerId)
+        , NewReq
+        };
+      {_GetOrDelete, NewReq} ->
+        { lsl:is_match(MatchId) and not lsl:is_playing(MatchId, PlayerId)
         , NewReq
         }
     end,
@@ -97,6 +98,13 @@ handle_get(Req, State) ->
     _:Exception ->
       lsl_web_utils:handle_exception(Exception, Req, State)
   end.
+
+-spec delete_resource(cowboy_req:req(), state()) ->
+  {boolean(), cowboy_req:req(), state()}.
+delete_resource(Req, State) ->
+  #{binding := MatchId} = State,
+  Response = lsl:stop_match(MatchId),
+  {Response, Req, State}.
 
 parse_body(Body) ->
   Json = lsl_json:decode(Body),
