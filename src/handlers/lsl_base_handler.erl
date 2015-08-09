@@ -101,14 +101,9 @@ is_authorized([session|Rest], DefaultMech, Req, State) ->
   end.
 
 credentials(Req) ->
-  try cowboy_req:parse_header(<<"authorization">>, Req) of
+  case cowboy_req:parse_header(<<"authorization">>, Req) of
     {ok, {<<"basic">>, Credentials}, Req1} ->
       {Credentials, Req1};
-    {ok, undefined, Req1} ->
+    {ok, _, Req1} ->
       {undefined, Req1}
-  catch
-    _:Exception ->
-      ErrorMsg = "error trying to check auth: ~p~n\tStack: ~p~n",
-      lager:error(ErrorMsg, [Exception, erlang:get_stacktrace()]),
-      throw(Exception)
   end.

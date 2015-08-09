@@ -31,9 +31,6 @@ handle_exception(bad_json, Req, State) ->
   Response = lsl_json:encode(#{error => <<"invalid json">>}),
   {ok, Req1} = cowboy_req:reply(400, [], Response, Req),
   {halt, Req1, State};
-handle_exception(not_found, Req, State) ->
-  {ok, Req1} = cowboy_req:reply(404, Req),
-  {halt, Req1, State};
 handle_exception(out_of_bounds, Req, State) ->
   Response = lsl_json:encode(#{error => <<"out of bounds">>}),
   {ok, Req1} = cowboy_req:reply(400, [], Response, Req),

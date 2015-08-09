@@ -71,15 +71,10 @@ handle_post(Req, State) ->
 -spec handle_get(cowboy_req:req(), state()) ->
     {iodata(), cowboy_req:req(), state()}.
 handle_get(Req, State) ->
-  try
-    RespBody =
-      lsl_json:encode(
-        [lsl_players:to_json(Player) || Player <- lsl:fetch_players()]),
-    {RespBody, Req, State}
-  catch
-    _:Exception ->
-      lsl_web_utils:handle_exception(Exception, Req, State)
-  end.
+  RespBody =
+    lsl_json:encode(
+      [lsl_players:to_json(Player) || Player <- lsl:fetch_players()]),
+  {RespBody, Req, State}.
 
 parse_body(Body) ->
   Json = lsl_json:decode(Body),

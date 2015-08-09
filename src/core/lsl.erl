@@ -19,6 +19,7 @@
         , can_close_session/2
         , fetch_session_player/2
         , fetch_players/0
+        , fetch_ai_players/0
         , start_match/3
         , fetch_ai/1
         , find_matches/2
@@ -63,6 +64,7 @@ start_phase(start_cowboy_listeners, _StartType, []) ->
     [{'_',
       [ {"/status", lsl_status_handler,  []}
       , {"/players", lsl_players_handler, []}
+      , {"/ai-players", lsl_ai_players_handler, []}
       , {"/sessions/:session_token", lsl_session_handler, []}
       , {"/sessions", lsl_sessions_handler, []}
       , {"/matches/:match_id", lsl_match_handler, []}
@@ -122,6 +124,10 @@ fetch_session_player(Token, Secret) ->
 %% @doc Retrieves all players
 -spec fetch_players() -> [lsl_players:player(),...].
 fetch_players() -> lsl_players_repo:all().
+
+%% @doc Retrieves all AI players
+-spec fetch_ai_players() -> [module(),...].
+fetch_ai_players() -> lsl_ai:all().
 
 %% @doc Retrieves a list of matches for a particular player
 -spec find_matches(lsl_players:player(), all | lsl_matches:status()) ->

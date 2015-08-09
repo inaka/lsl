@@ -73,23 +73,31 @@ post_sessions_wrong(Config) ->
 
   ct:comment("POST without auth fails"),
   #{status_code := 401,
-        headers := RHeaders0} = lsl_test_utils:api_call(post, "/sessions"),
+        headers := RHeadersZ} = lsl_test_utils:api_call(post, "/sessions"),
+  {<<"www-authenticate">>, <<"Basic realm=\"player\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeadersZ),
+
+  ct:comment("POST with any auth fails"),
+  Headers0 = #{<<"authorization">> => <<"something wrong">>},
+  #{status_code := 401,
+        headers := RHeaders0} =
+    lsl_test_utils:api_call(post, "/sessions", Headers0),
   {<<"www-authenticate">>, <<"Basic realm=\"player\"">>} =
     lists:keyfind(<<"www-authenticate">>, 1, RHeaders0),
 
   ct:comment("POST with wrong auth fails"),
-  Headers0 = #{basic_auth => {"some name", "very bad pwd"}},
+  Headers1 = #{basic_auth => {"some name", "very bad pwd"}},
   #{status_code := 401,
         headers := RHeaders1} =
-    lsl_test_utils:api_call(post, "/sessions", Headers0),
+    lsl_test_utils:api_call(post, "/sessions", Headers1),
   {<<"www-authenticate">>, <<"Basic realm=\"player\"">>} =
     lists:keyfind(<<"www-authenticate">>, 1, RHeaders1),
 
   ct:comment("POST with wrong password fails"),
-  Headers1 = #{basic_auth => {Name, "very bad pwd"}},
+  Headers2 = #{basic_auth => {Name, "very bad pwd"}},
   #{status_code := 401,
         headers := RHeaders2} =
-    lsl_test_utils:api_call(post, "/sessions", Headers1),
+    lsl_test_utils:api_call(post, "/sessions", Headers2),
   {<<"www-authenticate">>, <<"Basic realm=\"player\"">>} =
     lists:keyfind(<<"www-authenticate">>, 1, RHeaders2),
 
@@ -146,43 +154,51 @@ delete_sessions_wrong(Config) ->
 
   ct:comment("DELETE without auth fails"),
   #{status_code := 401,
-        headers := RHeaders0} = lsl_test_utils:api_call(delete, "/sessions/0"),
+        headers := RHeadersZ} = lsl_test_utils:api_call(delete, "/sessions/0"),
+  {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeadersZ),
+
+  ct:comment("DELETE with any auth fails"),
+  Headers0 = #{<<"authorization">> => <<"something wrong">>},
+  #{status_code := 401,
+        headers := RHeaders0} =
+    lsl_test_utils:api_call(delete, "/sessions/0", Headers0),
   {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
     lists:keyfind(<<"www-authenticate">>, 1, RHeaders0),
 
   ct:comment("DELETE with wrong auth fails"),
-  Headers0 = #{basic_auth => {"some name", "very bad pwd"}},
+  Headers1 = #{basic_auth => {"some name", "very bad pwd"}},
   #{status_code := 401,
         headers := RHeaders1} =
-    lsl_test_utils:api_call(delete, "/sessions/1", Headers0),
+    lsl_test_utils:api_call(delete, "/sessions/1", Headers1),
   {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
     lists:keyfind(<<"www-authenticate">>, 1, RHeaders1),
 
   ct:comment("DELETE with wrong password fails"),
-  Headers1 = #{basic_auth => {Name, "very bad pwd"}},
+  Headers2 = #{basic_auth => {Name, "very bad pwd"}},
   #{status_code := 401,
         headers := RHeaders2} =
-    lsl_test_utils:api_call(delete, "/sessions/2", Headers1),
+    lsl_test_utils:api_call(delete, "/sessions/2", Headers2),
   {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
     lists:keyfind(<<"www-authenticate">>, 1, RHeaders2),
 
   ct:comment("DELETE with wrong secret fails"),
-  Headers2 = #{basic_auth => {Token, "very bad secret"}},
+  Headers3 = #{basic_auth => {Token, "very bad secret"}},
   #{status_code := 401,
         headers := RHeaders3} =
-    lsl_test_utils:api_call(delete, "/sessions/3", Headers2),
+    lsl_test_utils:api_call(delete, "/sessions/3", Headers3),
   {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
     lists:keyfind(<<"www-authenticate">>, 1, RHeaders3),
 
   ct:comment("DELETE session from other player fails"),
-  Headers3 = #{basic_auth => {Name, "pwd"}},
-  #{status_code := 403} =
-    lsl_test_utils:api_call(delete, "/sessions/" ++ Token2, Headers3),
-
-  ct:comment("DELETE session from other player (using token) fails"),
-  Headers4 = #{basic_auth => {Token, Secret}},
+  Headers4 = #{basic_auth => {Name, "pwd"}},
   #{status_code := 403} =
     lsl_test_utils:api_call(delete, "/sessions/" ++ Token2, Headers4),
+
+  ct:comment("DELETE session from other player (using token) fails"),
+  Headers5 = #{basic_auth => {Token, Secret}},
+  #{status_code := 403} =
+    lsl_test_utils:api_call(delete, "/sessions/" ++ Token2, Headers5),
 
   {comment, ""}.
 

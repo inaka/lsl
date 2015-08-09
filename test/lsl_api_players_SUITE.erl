@@ -31,6 +31,8 @@
         , post_players_ok/1
         , get_players_wrong/1
         , get_players_ok/1
+        , get_ai_players_wrong/1
+        , get_ai_players_ok/1
         ]).
 
 -spec all() -> [atom()].
@@ -154,7 +156,15 @@ get_players_wrong(Config) ->
 
   ct:comment("GET without auth fails"),
   #{status_code := 401,
-        headers := RHeaders0} = lsl_test_utils:api_call(get, "/players"),
+        headers := RHeadersZ} = lsl_test_utils:api_call(get, "/players"),
+  {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeadersZ),
+
+  ct:comment("GET with any auth fails"),
+  Headers0 = #{<<"authorization">> => <<"something wrong">>},
+  #{status_code := 401,
+        headers := RHeaders0} =
+    lsl_test_utils:api_call(get, "/players", Headers0),
   {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
     lists:keyfind(<<"www-authenticate">>, 1, RHeaders0),
 
@@ -199,5 +209,62 @@ get_players_ok(Config) ->
     lsl_test_utils:api_call(get, "/players", Headers),
   Players2 = lsl_json:decode(Body2),
   [#{<<"name">> := <<"get_players_ok-2">>}] = Players2 -- Players1,
+
+  {comment, ""}.
+
+-spec get_ai_players_wrong(lsl_test_utils:config()) -> {comment, []}.
+get_ai_players_wrong(Config) ->
+  {session, Session} = lists:keyfind(session, 1, Config),
+  Token = binary_to_list(lsl_sessions:token(Session)),
+
+  ct:comment("GET without auth fails"),
+  #{status_code := 401,
+        headers := RHeadersZ} = lsl_test_utils:api_call(get, "/ai-players"),
+  {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeadersZ),
+
+  ct:comment("GET with any auth fails"),
+  Headers0 = #{<<"authorization">> => <<"something wrong">>},
+  #{status_code := 401,
+        headers := RHeaders0} =
+    lsl_test_utils:api_call(get, "/ai-players", Headers0),
+  {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeaders0),
+
+  ct:comment("GET with wrong auth fails"),
+  Headers1 = #{basic_auth => {"some token", "very bad secret"}},
+  #{status_code := 401,
+        headers := RHeaders1} =
+    lsl_test_utils:api_call(get, "/ai-players", Headers1),
+  {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeaders1),
+
+  ct:comment("GET with wrong secret fails"),
+  Headers2 = #{basic_auth => {Token, "very bad secret"}},
+  #{status_code := 401,
+        headers := RHeaders2} =
+    lsl_test_utils:api_call(get, "/ai-players", Headers2),
+  {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeaders2),
+
+  {comment, ""}.
+
+-spec get_ai_players_ok(lsl_test_utils:config()) -> {comment, []}.
+get_ai_players_ok(Config) ->
+  {session, Session} = lists:keyfind(session, 1, Config),
+  Token = binary_to_list(lsl_sessions:token(Session)),
+  Secret = binary_to_list(lsl_sessions:secret(Session)),
+  Headers = #{basic_auth => {Token, Secret}},
+  DumbAIName = lsl_ai_dumb:name(),
+
+  ct:comment("GET /ai-players returns at least the dumb"),
+  #{status_code := 200,
+           body := Body1} =
+    lsl_test_utils:api_call(get, "/ai-players", Headers),
+  Players1 = lsl_json:decode(Body1),
+  [_] =
+    [Name || #{<<"id">> := <<"lsl_ai_dumb">>, <<"name">> := Name} <- Players1
+         , Name == DumbAIName
+         ],
 
   {comment, ""}.

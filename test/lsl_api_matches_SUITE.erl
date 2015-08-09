@@ -20,6 +20,11 @@
              , get_matches_wrong/1
              , get_matches_ok/1
              , get_match_wrong/1
+             , get_match_ok/1
+             , patch_match_wrong/1
+             , patch_match_ok/1
+             , delete_match_wrong/1
+             , delete_match_ok/1
              ]).
 
 -export([ all/0
@@ -84,7 +89,15 @@ post_matches_wrong(Config) ->
 
   ct:comment("POST without auth fails"),
   #{status_code := 401,
-        headers := RHeaders0} = lsl_test_utils:api_call(post, "/matches"),
+        headers := RHeadersZ} = lsl_test_utils:api_call(post, "/matches"),
+  {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeadersZ),
+
+  ct:comment("POST with any auth fails"),
+  Headers0 = #{<<"authorization">> => <<"something wrong">>},
+  #{status_code := 401,
+        headers := RHeaders0} =
+    lsl_test_utils:api_call(post, "/matches", Headers0),
   {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
     lists:keyfind(<<"www-authenticate">>, 1, RHeaders0),
 
@@ -265,7 +278,15 @@ get_matches_wrong(Config) ->
 
   ct:comment("GET without auth fails"),
   #{status_code := 401,
-        headers := RHeaders0} = lsl_test_utils:api_call(get, "/matches"),
+        headers := RHeadersZ} = lsl_test_utils:api_call(get, "/matches"),
+  {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeadersZ),
+
+  ct:comment("GET with any auth fails"),
+  Headers0 = #{<<"authorization">> => <<"something wrong">>},
+  #{status_code := 401,
+        headers := RHeaders0} =
+    lsl_test_utils:api_call(get, "/matches", Headers0),
   {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
     lists:keyfind(<<"www-authenticate">>, 1, RHeaders0),
 
@@ -378,6 +399,10 @@ get_matches_status_ok(Config) ->
   Headers = #{basic_auth => {Token, Secret}},
   {player2, Player2} = lists:keyfind(player2, 1, Config),
   Rival = lsl_players:id(Player2),
+  {session2, SessionB} = lists:keyfind(session2, 1, Config),
+  RivToken = binary_to_list(lsl_sessions:token(SessionB)),
+  RivSecret = binary_to_list(lsl_sessions:secret(SessionB)),
+  RivHeaders = #{basic_auth => {RivToken, RivSecret}},
 
   ct:comment("Three matches are created"),
   PlayingId = lsl_matches:id(lsl:start_match(PlayerId, Rival, 3)),
@@ -393,24 +418,36 @@ get_matches_status_ok(Config) ->
   lsl:play(LostId, Rival, 2, 1, 1),
 
   MatchIds =
-    fun(Status) ->
+    fun(Status, Hs) ->
       #{status_code := 200,
                body := Body} =
-        lsl_test_utils:api_call(get, "/matches?status=" ++ Status, Headers),
+        lsl_test_utils:api_call(get, "/matches?status=" ++ Status, Hs),
       lists:sort([MatchId || #{<<"id">> := MatchId} <- lsl_json:decode(Body)])
     end,
 
   ct:comment("GET /matches?status=all returns all of them"),
-  AllIds = MatchIds("all"),
+  AllIds = MatchIds("all", Headers),
+  AllIds = MatchIds("all", RivHeaders),
 
   ct:comment("GET /matches?status=won returns the on that the player won"),
-  [WonId] = MatchIds("won"),
+  [WonId] = MatchIds("won", Headers),
+  [LostId] = MatchIds("won", RivHeaders),
 
   ct:comment("GET /matches?status=lost returns the on that the player lost"),
-  [LostId] = MatchIds("lost"),
+  [LostId] = MatchIds("lost", Headers),
+  [WonId] = MatchIds("lost", RivHeaders),
+
+  ct:comment("everything still works *after* the games are absolutely over"),
+  lsl:play(WonId, Rival, 1, 1, 1),
+  lsl:play(LostId, PlayerId, 2, 2, 1),
+  [WonId] = MatchIds("won", Headers),
+  [LostId] = MatchIds("won", RivHeaders),
+  [LostId] = MatchIds("lost", Headers),
+  [WonId] = MatchIds("lost", RivHeaders),
 
   ct:comment("GET /matches?status=playing returns the on that's still ongoing"),
-  [PlayingId] = MatchIds("playing"),
+  [PlayingId] = MatchIds("playing", Headers),
+  [PlayingId] = MatchIds("playing", RivHeaders),
 
   {comment, ""}.
 
@@ -426,7 +463,15 @@ get_match_wrong(Config) ->
 
   ct:comment("GET without auth fails"),
   #{status_code := 401,
-        headers := RHeaders0} = lsl_test_utils:api_call(get, "/matches/id"),
+        headers := RHeadersZ} = lsl_test_utils:api_call(get, "/matches/id"),
+  {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeadersZ),
+
+  ct:comment("GET with any auth fails"),
+  Headers0 = #{<<"authorization">> => <<"something wrong">>},
+  #{status_code := 401,
+        headers := RHeaders0} =
+    lsl_test_utils:api_call(get, "/matches/id", Headers0),
   {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
     lists:keyfind(<<"www-authenticate">>, 1, RHeaders0),
 
@@ -527,7 +572,15 @@ patch_match_wrong(Config) ->
 
   ct:comment("PATCH without auth fails"),
   #{status_code := 401,
-        headers := RHeaders0} = lsl_test_utils:api_call(patch, "/matches/id"),
+        headers := RHeadersZ} = lsl_test_utils:api_call(patch, "/matches/id"),
+  {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeadersZ),
+
+  ct:comment("PATCH with any auth fails"),
+  Headers0 = #{<<"authorization">> => <<"something wrong">>},
+  #{status_code := 401,
+        headers := RHeaders0} =
+    lsl_test_utils:api_call(patch, "/matches/id", Headers0),
   {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
     lists:keyfind(<<"www-authenticate">>, 1, RHeaders0),
 
@@ -696,7 +749,15 @@ delete_match_wrong(Config) ->
 
   ct:comment("DELETE without auth fails"),
   #{status_code := 401,
-        headers := RHeaders0} = lsl_test_utils:api_call(delete, "/matches/id"),
+        headers := RHeadersZ} = lsl_test_utils:api_call(delete, "/matches/id"),
+  {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
+    lists:keyfind(<<"www-authenticate">>, 1, RHeadersZ),
+
+  ct:comment("DELETE with any auth fails"),
+  Headers0 = #{<<"authorization">> => <<"something wrong">>},
+  #{status_code := 401,
+        headers := RHeaders0} =
+    lsl_test_utils:api_call(delete, "/matches/id", Headers0),
   {<<"www-authenticate">>, <<"Basic realm=\"session\"">>} =
     lists:keyfind(<<"www-authenticate">>, 1, RHeaders0),
 
