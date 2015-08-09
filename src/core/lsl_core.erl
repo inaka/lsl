@@ -51,7 +51,7 @@ snapshot(#{board := Board}) -> do_snapshot(Board).
 cross(Row, Col, Length, Match) ->
   validate_bounds(Row, Col, Length, rows(Match)),
   #{board := Board, history := History} = Match,
-  {Up, [OldRow|Down]} = lists:split(Row - 1, Board),
+  {Up, OldRow, Down} = split_board_at(Row, Board),
   {Left, Rest} = lists:split(Col - 1, OldRow),
   {ToCross, Right} = lists:split(Length, Rest),
   validate_not_crossed(ToCross),
@@ -68,7 +68,7 @@ cross(Row, Col, Length, Match) ->
 undo(Match = #{history := [Row|History]}) ->
   #{board := Board} = Match,
   RowNum = length(Row),
-  {Up, [_|Down]} = lists:split(RowNum - 1, Board),
+  {Up, _, Down} = split_board_at(RowNum, Board),
   NewBoard = Up ++ [Row|Down],
   Match#{board := NewBoard, history := History};
 undo(_Match) -> throw(no_history).
@@ -137,3 +137,7 @@ do_print([crossed, crossed | Sticks], Acc) ->
 do_snapshot(clean) -> i;
 do_snapshot(crossed) -> x;
 do_snapshot(List) -> [do_snapshot(Elem) || Elem <- List].
+
+split_board_at(RowNum, Board) ->
+  {Up, [Row|Down]} = lists:split(RowNum - 1, Board),
+  {Up, Row, Down}.

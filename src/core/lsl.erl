@@ -122,11 +122,11 @@ fetch_session_player(Token, Secret) ->
   end.
 
 %% @doc Retrieves all players
--spec fetch_players() -> [lsl_players:player(),...].
+-spec fetch_players() -> [lsl_players:player(), ...].
 fetch_players() -> lsl_players_repo:all().
 
 %% @doc Retrieves all AI players
--spec fetch_ai_players() -> [module(),...].
+-spec fetch_ai_players() -> [module(), ...].
 fetch_ai_players() -> lsl_ai:all().
 
 %% @doc Retrieves a list of matches for a particular player

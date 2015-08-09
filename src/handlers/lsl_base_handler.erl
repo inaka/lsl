@@ -67,7 +67,7 @@ resource_exists(Req, State) ->
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 -spec is_authorized(
-  [lsl_web_utils:authorization_mechanism(),...], cowboy_req:req(), state()) ->
+  [lsl_web_utils:authorization_mechanism(), ...], cowboy_req:req(), state()) ->
   {true | {false, binary()}, cowboy_req:req(), state()}.
 is_authorized([DefaultMech|_] = Mechanisms, Req, State) ->
   is_authorized(Mechanisms, DefaultMech, Req, State).
@@ -85,20 +85,21 @@ is_authorized([player|Rest], DefaultMech, Req, State) ->
   case credentials(Req) of
     {undefined, Req1} -> is_authorized(Rest, DefaultMech, Req1, State);
     {{Name, Password}, Req1} ->
-      case lsl:fetch_player(Name, Password) of
-        notfound -> is_authorized(Rest, DefaultMech, Req1, State);
-        Player -> {true, Req1, State#{player => Player}}
-      end
+      is_authorized(
+        lsl:fetch_player(Name, Password), Rest, DefaultMech, Req1, State)
   end;
 is_authorized([session|Rest], DefaultMech, Req, State) ->
   case credentials(Req) of
     {undefined, Req1} -> is_authorized(Rest, DefaultMech, Req1, State);
     {{Token, Secret}, Req1} ->
-      case lsl:fetch_session_player(Token, Secret) of
-        notfound -> is_authorized(Rest, DefaultMech, Req1, State);
-        Player -> {true, Req1, State#{player => Player}}
-      end
+      is_authorized(
+        lsl:fetch_session_player(Token, Secret), Rest, DefaultMech, Req1, State)
   end.
+
+is_authorized(notfound, Rest, DefaultMech, Req, State) ->
+  is_authorized(Rest, DefaultMech, Req, State);
+is_authorized(Player, _Rest, _DefaultMech, Req, State) ->
+  {true, Req, State#{player => Player}}.
 
 credentials(Req) ->
   case cowboy_req:parse_header(<<"authorization">>, Req) of

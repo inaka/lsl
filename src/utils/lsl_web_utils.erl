@@ -18,23 +18,19 @@ announce_req(Req, Suffix) ->
     {halt, cowboy_req:req(), term()}.
 handle_exception({missing_field, Field}, Req, State) ->
   Response = lsl_json:encode(#{error => <<"missing field: ", Field/binary>>}),
-  {ok, Req1} = cowboy_req:reply(400, [], Response, Req),
-  {halt, Req1, State};
+  halt(Response, Req, State);
 handle_exception({invalid_field, Field}, Req, State) ->
   Response = lsl_json:encode(#{error => <<"invalid field: ", Field/binary>>}),
-  {ok, Req1} = cowboy_req:reply(400, [], Response, Req),
-  {halt, Req1, State};
+  halt(Response, Req, State);
 handle_exception(conflict, Req, State) ->
   {ok, Req1} = cowboy_req:reply(409, Req),
   {halt, Req1, State};
 handle_exception(bad_json, Req, State) ->
   Response = lsl_json:encode(#{error => <<"invalid json">>}),
-  {ok, Req1} = cowboy_req:reply(400, [], Response, Req),
-  {halt, Req1, State};
+  halt(Response, Req, State);
 handle_exception(out_of_bounds, Req, State) ->
   Response = lsl_json:encode(#{error => <<"out of bounds">>}),
-  {ok, Req1} = cowboy_req:reply(400, [], Response, Req),
-  {halt, Req1, State};
+  halt(Response, Req, State);
 handle_exception(Reason, Req, State) ->
   lager:error("~p. Stack Trace: ~p", [Reason, erlang:get_stacktrace()]),
   {ok, Req1} =
@@ -46,4 +42,8 @@ handle_exception(Reason, Req, State) ->
           [Error, erlang:get_stacktrace()]),
         {ok, Req}
     end,
+  {halt, Req1, State}.
+
+halt(Response, Req, State) ->
+  {ok, Req1} = cowboy_req:reply(400, [], Response, Req),
   {halt, Req1, State}.

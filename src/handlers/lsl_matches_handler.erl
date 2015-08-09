@@ -94,15 +94,16 @@ parse_body(Body) ->
     {null, _} -> throw({missing_field, <<"rival">>});
     {_, Rows} when not is_integer(Rows) -> throw({invalid_field, <<"rows">>});
     {_, Rows} when Rows < 2 -> throw({invalid_field, <<"rows">>});
-    {RivalId, Rows} ->
-      case lsl:fetch_ai(RivalId) of
-        notfound ->
-          case lsl:fetch_player(RivalId) of
-            notfound -> throw({invalid_field, <<"rival">>});
-            Rival -> {player, Rival, Rows}
-          end;
-        AI -> {ai, AI, Rows}
-      end
+    {RivalId, Rows} -> parse_body(RivalId, Rows)
+  end.
+parse_body(RivalId, Rows) ->
+  case lsl:fetch_ai(RivalId) of
+    notfound ->
+      case lsl:fetch_player(RivalId) of
+        notfound -> throw({invalid_field, <<"rival">>});
+        Rival -> {player, Rival, Rows}
+      end;
+    AI -> {ai, AI, Rows}
   end.
 
 parse_qs(<<"all">>) -> all;

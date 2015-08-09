@@ -157,7 +157,7 @@ status(CallerId,  CallerId,       lost) -> won;
 status(_CallerId, _Rival,         lost) -> lost.
 
 %% @doc match players
--spec players(match()) -> [binary(),...].
+-spec players(match()) -> [binary(), ...].
 players(#{player_id := PlayerId, rival := Rival}) -> [PlayerId, Rival].
 
 %% @doc is it a match against AI or another player?

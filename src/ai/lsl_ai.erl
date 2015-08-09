@@ -18,7 +18,7 @@ play(Mod, Match) ->
   lsl_core:cross(Row, Col, Length, Match).
 
 %% @doc Retrieves all AI players
--spec all() -> [module(),...].
+-spec all() -> [module(), ...].
 all() -> application:get_env(lsl, ais, [lsl_ai_dumb]).
 
 %% @doc Retrieves the module that provides a particular AI
