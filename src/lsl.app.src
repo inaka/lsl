@@ -1,0 +1,19 @@
+{application, lsl, [
+  {description, "Last Stick Loses"},
+  {vsn, "0.0.1"},
+  {id, "last-stick-loses"},
+  {registered, []},
+  {applications, [
+    kernel,
+    stdlib,
+    sasl,
+    lager,
+    cowboy,
+    sumo_db,
+    erlpass
+  ]},
+  {modules, []},
+  {mod, {lsl, []}},
+  {env, []},
+  {start_phases, [{create_schema, []}, {start_cowboy_listeners, []}]}
+ ]}.

@@ -1,5 +1,5 @@
 %%% @doc Internal representation and logic of a LSL match.
--module(lsl_match).
+-module(lsl_core).
 -author('elbrujohalcon@inaka.net').
 
 -type stick_state() :: clean | crossed.
@@ -25,8 +25,8 @@
 -export_type([cross_result/0]).
 
 -export([new/1, rows/1, snapshot/1]).
--export([cross/4, undo/1]).
--export([print/1]).
+-export([cross/4, undo/1, last_result/1, turns/1]).
+-export([print/1, to_json/1]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% EXPORTED FUNCTIONS
@@ -51,7 +51,7 @@ snapshot(#{board := Board}) -> do_snapshot(Board).
 cross(Row, Col, Length, Match) ->
   validate_bounds(Row, Col, Length, rows(Match)),
   #{board := Board, history := History} = Match,
-  {Up, [OldRow|Down]} = lists:split(Row - 1, Board),
+  {Up, OldRow, Down} = split_board_at(Row, Board),
   {Left, Rest} = lists:split(Col - 1, OldRow),
   {ToCross, Right} = lists:split(Length, Rest),
   validate_not_crossed(ToCross),
@@ -68,16 +68,32 @@ cross(Row, Col, Length, Match) ->
 undo(Match = #{history := [Row|History]}) ->
   #{board := Board} = Match,
   RowNum = length(Row),
-  {Up, [_|Down]} = lists:split(RowNum - 1, Board),
+  {Up, _, Down} = split_board_at(RowNum, Board),
   NewBoard = Up ++ [Row|Down],
   Match#{board := NewBoard, history := History};
 undo(_Match) -> throw(no_history).
+
+%% @doc Returns the last cross result.
+%%      In other words, the status of the match
+-spec last_result(match()) -> cross_result().
+last_result(#{board := Board}) ->
+  cross_result(Board).
+
+%% @doc How many turns have been played.
+%%      In other words, the length of the history
+-spec turns(match()) -> non_neg_integer().
+turns(#{history := History}) -> length(History).
 
 %% @doc returns a printable version of the board
 -spec print(match()) -> iodata().
 print(#{board := Board}) ->
   RowWidth = length(Board),
   [print(Row, RowWidth) || Row <- Board].
+
+%% @doc returns a json-able version of the board
+-spec to_json(match()) -> [[boolean()]].
+to_json(#{board := Board}) ->
+  [[Item == crossed || Item <- Row] || Row <- Board].
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% INTERNAL FUNCTIONS
@@ -121,3 +137,7 @@ do_print([crossed, crossed | Sticks], Acc) ->
 do_snapshot(clean) -> i;
 do_snapshot(crossed) -> x;
 do_snapshot(List) -> [do_snapshot(Elem) || Elem <- List].
+
+split_board_at(RowNum, Board) ->
+  {Up, [Row|Down]} = lists:split(RowNum - 1, Board),
+  {Up, Row, Down}.
