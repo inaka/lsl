@@ -14,6 +14,7 @@
 -type state() :: #{ player => undefined | lsl_players:player()
                   , binding => undefined | binary()
                   }.
+-export_type([state/0]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Specs (to be copied to other modules)

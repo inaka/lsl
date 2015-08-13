@@ -19,6 +19,7 @@ dep_sync = git https://github.com/inaka/sync.git 0.1.3
 dep_shotgun = git https://github.com/inaka/shotgun.git 0.1.12
 dep_xref_runner = git https://github.com/inaka/xref_runner.git 0.2.2
 
+PLT_APPS := crypto mnesia
 DIALYZER_DIRS := ebin/
 DIALYZER_OPTS := --verbose --statistics -Werror_handling \
                  -Wrace_conditions #-Wunmatched_returns

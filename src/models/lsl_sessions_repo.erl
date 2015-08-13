@@ -9,7 +9,7 @@
         ]).
 
 %% @doc Creates a new session
--spec open(binary()) -> {lsl_sessions:session()}.
+-spec open(binary()) -> lsl_sessions:session().
 open(PlayerId) ->
   Secret = lsl_crypto:secret(),
   SecretHash = lsl_crypto:hash(Secret),
