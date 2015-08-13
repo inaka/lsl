@@ -54,7 +54,7 @@ play(MatchId, PlayerId, Row, Col, Length) ->
         _ -> throw(invalid_player)
       end
   end.
-do_play(Match, PlayerId, Row, Col, Length) ->
+do_play(Match, _PlayerId, Row, Col, Length) ->
   NewCore =
     case lsl_core:cross(Row, Col, Length, lsl_matches:core(Match)) of
       {lost, Core} -> Core;
