@@ -21,24 +21,6 @@
 
 -type state() :: lsl_base_handler:state().
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Mixin Specs
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
--spec init({atom(), atom()}, cowboy_req:req(), state()) ->
-  {upgrade, protocol, cowboy_rest}.
--spec rest_init(cowboy_req:req(), state()) ->
-  {ok, cowboy_req:req(), term()}.
--spec is_authorized(cowboy_req:req(), state()) ->
-  {true | {false, binary()}, cowboy_req:req(), state()}.
--spec content_types_accepted(cowboy_req:req(), state()) ->
-    {[{{binary(), binary(), '*'}, atom()}], cowboy_req:req(), state()}.
--spec content_types_provided(cowboy_req:req(), state()) ->
-  {[term()], cowboy_req:req(), state()}.
--spec resource_exists(cowboy_req:req(), term()) ->
-  {boolean(), cowboy_req:req(), term()}.
-
-
 -spec allowed_methods(cowboy_req:req(), state()) ->
   {[binary()], cowboy_req:req(), state()}.
 allowed_methods(Req, State) ->
@@ -79,7 +61,7 @@ handle_get(Req, State) ->
         [ lsl_matches:to_json(Match, lsl_players:id(Player))
         || Match <- lsl:find_matches(Player, Status)
         ]),
-    {RespBody, Req, State}
+    {RespBody, Req1, State}
   catch
     _:Exception ->
       lsl_web_utils:handle_exception(Exception, Req, State)
