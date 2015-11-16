@@ -14,12 +14,12 @@ all() -> lsl_test_utils:all(?MODULE).
   lsl_test_utils:config().
 init_per_testcase(app_starts, Config) ->
   ct:comment("The app should not be running"),
-  application:stop(lsl),
+  _ = application:stop(lsl),
   [] = [Vsn || {lsl, _, Vsn} <- application:which_applications()],
   Config;
 init_per_testcase(app_stops, Config) ->
   ct:comment("The app should be running"),
-  application:ensure_all_started(lsl),
+  {ok, _} = application:ensure_all_started(lsl),
   [_] = [Vsn || {lsl, _, Vsn} <- application:which_applications()],
   Config.
 

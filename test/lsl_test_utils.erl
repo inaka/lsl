@@ -32,8 +32,8 @@ init_per_suite(Config) ->
 
 -spec end_per_suite(config()) -> config().
 end_per_suite(Config) ->
-  lsl:stop(),
-  shotgun:stop(),
+  _ = lsl:stop(),
+  _ = shotgun:stop(),
   Config.
 
 -spec api_call(atom(), string()) -> #{}.
