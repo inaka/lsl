@@ -30,7 +30,7 @@ is_authorized(Req, State) ->
   {true, Req, State}.
 
 -spec handle_get(cowboy_req:req(), state()) ->
-  {halt | binary(), cowboy_req:req(), state()}.
+  {iodata(), cowboy_req:req(), state()}.
 handle_get(Req, State) ->
   Reply = lsl_json:encode(#{status => <<"ok">>}),
   {Reply, Req, State}.

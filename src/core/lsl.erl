@@ -52,8 +52,12 @@ start(_StartType, _Args) -> {ok, self()}.
 %% @private
 -spec start_phase(atom(), application:start_type(), []) -> ok | {error, _}.
 start_phase(create_schema, _StartType, []) ->
-  application:stop(mnesia),
-  mnesia:create_schema([node()]),
+  _ = application:stop(mnesia),
+  Node = node(),
+  case mnesia:create_schema([Node]) of
+    ok -> ok;
+    {error, {Node, {already_exists, Node}}} -> ok
+  end,
   {ok, _} = application:ensure_all_started(mnesia),
   sumo:create_schema();
 start_phase(start_cowboy_listeners, _StartType, []) ->

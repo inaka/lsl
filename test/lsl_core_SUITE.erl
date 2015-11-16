@@ -31,18 +31,6 @@ all() -> lsl_test_utils:all(?MODULE).
 
 -spec invalid_board(lsl_test_utils:config()) -> {comment, []}.
 invalid_board(_Config) ->
-  ct:comment("Can't build a board without rows"),
-  try lsl_core:new(0) of
-    Match1 -> ct:fail("Unexpected Match: ~p", [Match1])
-  catch
-    _:invalid_board -> ok
-  end,
-  ct:comment("Can't build a board with negative rows"),
-  try lsl_core:new(-1) of
-    Match2 -> ct:fail("Unexpected Match: ~p", [Match2])
-  catch
-    _:invalid_board -> ok
-  end,
   ct:comment("Can't build a board with just one row"),
   try lsl_core:new(1) of
     Match3 -> ct:fail("Unexpected Match: ~p", [Match3])

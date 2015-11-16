@@ -16,6 +16,9 @@
              , matches_repo/1
              ]).
 
+-dialyzer(no_opaque).
+-dialyzer(no_return).
+
 -export([all/0, web_utils/1, matches_repo/1]).
 
 -spec all() -> [atom()].

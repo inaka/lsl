@@ -19,6 +19,10 @@ dep_sync        = git https://github.com/inaka/sync.git            0.1.3
 dep_shotgun     = git https://github.com/inaka/shotgun.git         0.1.12
 dep_xref_runner = git https://github.com/inaka/xref_runner.git     0.2.2
 
+LOCAL_DEPS := tools compiler syntax_tools common_test inets test_server dialyzer wx mnesia crypto
+
+# xmerl tools compiler syntax_tools common_test inets ssl public_key test_server dialyzer wx
+
 PLT_APPS := crypto mnesia
 DIALYZER_DIRS := ebin/
 DIALYZER_OPTS := --verbose --statistics -Werror_handling \
@@ -27,7 +31,7 @@ DIALYZER_OPTS := --verbose --statistics -Werror_handling \
 include erlang.mk
 
 DIALYZER_DIRS := ebin/ test/
-DIALYZER_OPTS += --verbose --statistics
+DIALYZER_OPTS += --verbose --statistics -Wunmatched_returns
 
 ERLC_OPTS := +'{parse_transform, lager_transform}' +'{lager_truncation_size, 65536}'
 ERLC_OPTS += +warn_unused_vars +warn_export_all +warn_shadow_vars +warn_unused_import +warn_unused_function

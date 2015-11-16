@@ -95,7 +95,8 @@ post_players_conflict(_Config) ->
   Body =
     lsl_json:encode(
       #{name => <<"test-conflict-player">>, password => <<"ap455w0rd">>}),
-  lsl_test_utils:api_call(post, "/players", Headers, Body),
+  #{status_code := 201} =
+    lsl_test_utils:api_call(post, "/players", Headers, Body),
 
   ct:comment("Try to create same user again"),
   #{status_code := 409} =
@@ -203,7 +204,7 @@ get_players_ok(Config) ->
   [] = [Pwd || #{<<"password">> := Pwd} <- Players1],
 
   ct:comment("When a player is added, GET /players should return it"),
-  lsl:register_player(<<"get_players_ok-2">>, <<"pwd">>),
+  _ = lsl:register_player(<<"get_players_ok-2">>, <<"pwd">>),
   #{status_code := 200,
            body := Body2} =
     lsl_test_utils:api_call(get, "/players", Headers),

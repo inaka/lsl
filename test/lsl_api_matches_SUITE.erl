@@ -344,7 +344,7 @@ get_matches_ok(Config) ->
   [] = lsl_json:decode(EmptyBody),
 
   ct:comment("A match that doesn't include player1 is created"),
-  lsl:start_match(Rival, lsl_ai_dumb, 5),
+  _ = lsl:start_match(Rival, lsl_ai_dumb, 5),
 
   ct:comment("GET /matches still returns an empty list"),
   #{status_code := 200,
@@ -411,11 +411,11 @@ get_matches_status_ok(Config) ->
   AllIds = lists:sort([PlayingId, WonId, LostId]),
 
   ct:comment("Player1 wins one, looses 1"),
-  lsl:play(WonId, Rival, 3, 1, 3),
-  lsl:play(WonId, PlayerId, 2, 1, 2),
-  lsl:play(LostId, Rival, 3, 1, 3),
-  lsl:play(LostId, PlayerId, 1, 1, 1),
-  lsl:play(LostId, Rival, 2, 1, 1),
+  _ = lsl:play(WonId, Rival, 3, 1, 3),
+  _ = lsl:play(WonId, PlayerId, 2, 1, 2),
+  _ = lsl:play(LostId, Rival, 3, 1, 3),
+  _ = lsl:play(LostId, PlayerId, 1, 1, 1),
+  _ = lsl:play(LostId, Rival, 2, 1, 1),
 
   MatchIds =
     fun(Status, Hs) ->
@@ -438,8 +438,8 @@ get_matches_status_ok(Config) ->
   [WonId] = MatchIds("lost", RivHeaders),
 
   ct:comment("everything still works *after* the games are absolutely over"),
-  lsl:play(WonId, Rival, 1, 1, 1),
-  lsl:play(LostId, PlayerId, 2, 2, 1),
+  _ = lsl:play(WonId, Rival, 1, 1, 1),
+  _ = lsl:play(LostId, PlayerId, 2, 2, 1),
   [WonId] = MatchIds("won", Headers),
   [LostId] = MatchIds("won", RivHeaders),
   [LostId] = MatchIds("lost", Headers),
