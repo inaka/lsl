@@ -2,26 +2,24 @@ PROJECT = lsl
 
 CONFIG ?= test/test.config
 
-DEPS = eper mixer lager cowboy jiffy sumo katana bcrypt erlpass
+DEPS = eper mixer lager cowboy jiffy sumo katana erlpass sumo_rest
 SELL_DEPS = sync
 TEST_DEPS = xref_runner shotgun
 
 dep_lager       = git https://github.com/basho/lager.git           3.0.2
-dep_bcrypt      = git https://github.com/opscode/erlang-bcrypt.git 0.5.0.3
-dep_erlpass     = git https://github.com/inaka/erlpass.git         1.0.3
-dep_katana      = git https://github.com/inaka/erlang-katana.git   0.2.14
+dep_erlpass     = git https://github.com/inaka/erlpass.git         06bcca3
+dep_katana      = git https://github.com/inaka/erlang-katana.git   07efe94
 dep_sumo        = git https://github.com/inaka/sumo_db.git         0.3.13
-dep_cowboy      = git https://github.com/extend/cowboy.git         1.0.3
-dep_jiffy       = git https://github.com/davisp/jiffy.git          0.14.3
-dep_eper        = git https://github.com/massemanet/eper.git       0.96.1
+dep_cowboy      = git https://github.com/extend/cowboy.git         1.0.4
+dep_jiffy       = git https://github.com/davisp/jiffy.git          0.14.4
+dep_eper        = git https://github.com/massemanet/eper.git       0.96.4
 dep_mixer       = git https://github.com/inaka/mixer.git           0.1.4
-dep_sync        = git https://github.com/inaka/sync.git            0.1.3
+dep_sync        = git https://github.com/rustyio/sync.git          9c78e7b
 dep_shotgun     = git https://github.com/inaka/shotgun.git         0.1.12
+dep_sumo_rest   = git https://github.com/inaka/sumo_rest.git       0.0.1
 dep_xref_runner = git https://github.com/inaka/xref_runner.git     0.2.2
 
 LOCAL_DEPS := tools compiler syntax_tools common_test inets test_server dialyzer wx mnesia crypto
-
-# xmerl tools compiler syntax_tools common_test inets ssl public_key test_server dialyzer wx
 
 PLT_APPS := crypto mnesia
 DIALYZER_DIRS := ebin/
