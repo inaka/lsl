@@ -49,4 +49,4 @@ trails() ->
 -spec is_authorized(cowboy_req:req(), state()) ->
   {true | {false, binary()}, cowboy_req:req(), state()}.
 is_authorized(Req, State) ->
-  lsl_base_handler:is_authorized([player], Req, State).
+  lsl_auth:is_authorized([player], Req, State).

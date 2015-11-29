@@ -41,7 +41,7 @@ trails() ->
      },
   Path = "/sessions/:id",
   Opts = #{ path => Path
-          , model => sr_sessions
+          , model => lsl_sessions
           },
   [trails:trail(Path, ?MODULE, Opts, Metadata)].
 

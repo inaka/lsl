@@ -17,7 +17,8 @@
           ]
         }]).
 
--export([ forbidden/2
+-export([ is_authorized/2
+        , forbidden/2
         , handle_patch/2
         , trails/0
         ]).
@@ -61,9 +62,14 @@ trails() ->
      },
   Path = "/matches/:id",
   Opts = #{ path => Path
-          , model => sr_matches
+          , model => lsl_matches
           },
   [trails:trail(Path, ?MODULE, Opts, Metadata)].
+
+-spec is_authorized(cowboy_req:req(), state()) ->
+  {true | {false, binary()}, cowboy_req:req(), state()}.
+is_authorized(Req, State) ->
+  lsl_auth:is_authorized([session], Req, State).
 
 -spec forbidden(cowboy_req:req(), state()) ->
   {boolean() | halt, cowboy_req:req(), state()}.
