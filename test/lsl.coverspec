@@ -17,7 +17,7 @@
  , lsl_players_repo
  , lsl_sessions
  , lsl_sessions_repo
- , lsl_json
+ , sr_json
  , lsl_web_utils
  ]
 }.

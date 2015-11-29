@@ -141,41 +141,41 @@ post_matches_wrong(Config) ->
   #{status_code := 400,
            body := Body0} =
     lsl_test_utils:api_call(post, "/matches", Headers, "{"),
-  #{<<"error">> := <<"invalid json">>} = lsl_json:decode(Body0),
+  #{<<"error">> := <<"invalid json">>} = sr_json:decode(Body0),
 
   ct:comment("No rival fails"),
   #{status_code := 400,
            body := Body1} =
     lsl_test_utils:api_call(post, "/matches", Headers, "{}"),
-  #{<<"error">> := <<"missing field: rival">>} = lsl_json:decode(Body1),
+  #{<<"error">> := <<"missing field: rival">>} = sr_json:decode(Body1),
 
   ct:comment("Invalid rival fails"),
   #{status_code := 400,
            body := Body2} =
     lsl_test_utils:api_call(post, "/matches", Headers, "{\"rival\":\"false\"}"),
-  #{<<"error">> := <<"invalid field: rival">>} = lsl_json:decode(Body2),
+  #{<<"error">> := <<"invalid field: rival">>} = sr_json:decode(Body2),
   #{status_code := 400,
            body := Body2} =
     lsl_test_utils:api_call(post, "/matches", Headers, "{\"rival\":\"io\"}"),
 
   ct:comment("Invalid rows fails"),
-  ReqBody3 = lsl_json:encode(#{rival => lsl_ai_dumb, rows => -1}),
+  ReqBody3 = sr_json:encode(#{rival => lsl_ai_dumb, rows => -1}),
   #{status_code := 400,
            body := Body3} =
     lsl_test_utils:api_call(post, "/matches", Headers, ReqBody3),
-  #{<<"error">> := <<"invalid field: rows">>} = lsl_json:decode(Body3),
+  #{<<"error">> := <<"invalid field: rows">>} = sr_json:decode(Body3),
 
-  ReqBody4 = lsl_json:encode(#{rival => Rival, rows => 0}),
+  ReqBody4 = sr_json:encode(#{rival => Rival, rows => 0}),
   #{status_code := 400,
            body := Body3} =
     lsl_test_utils:api_call(post, "/matches", Headers, ReqBody4),
 
-  ReqBody5 = lsl_json:encode(#{rival => lsl_ai_dumb, rows => false}),
+  ReqBody5 = sr_json:encode(#{rival => lsl_ai_dumb, rows => false}),
   #{status_code := 400,
            body := Body3} =
     lsl_test_utils:api_call(post, "/matches", Headers, ReqBody5),
 
-  ReqBody6 = lsl_json:encode(#{rival => Rival, rows => 1}),
+  ReqBody6 = sr_json:encode(#{rival => Rival, rows => 1}),
   #{status_code := 400,
            body := Body3} =
     lsl_test_utils:api_call(post, "/matches", Headers, ReqBody6),
@@ -200,7 +200,7 @@ post_matches_ok(Config) ->
   Rodolfo = lsl_ai_rodolfo:name(),
 
   ct:comment("Start a match against another player, default # of rows"),
-  ReqBody1 = lsl_json:encode(#{rival => Rival}),
+  ReqBody1 = sr_json:encode(#{rival => Rival}),
   #{status_code := 201,
            body := Body1} =
     lsl_test_utils:api_call(post, "/matches", Headers, ReqBody1),
@@ -212,10 +212,10 @@ post_matches_ok(Config) ->
                     ]
    , <<"current-player">> := Rival
    , <<"status">> := <<"playing">>
-   } = lsl_json:decode(Body1),
+   } = sr_json:decode(Body1),
 
   ct:comment("Start a match against another player, 2 rows"),
-  ReqBody2 = lsl_json:encode(#{rival => Rival, rows => 2}),
+  ReqBody2 = sr_json:encode(#{rival => Rival, rows => 2}),
   #{status_code := 201,
            body := Body2} =
     lsl_test_utils:api_call(post, "/matches", Headers, ReqBody2),
@@ -226,14 +226,14 @@ post_matches_ok(Config) ->
                     ]
    , <<"current-player">> := Rival
    , <<"status">> := <<"playing">>
-   } = lsl_json:decode(Body2),
+   } = sr_json:decode(Body2),
   case Id2 of
     Id1 -> ct:fail("Duplicated game");
     Id2 -> ok
   end,
 
   ct:comment("Start a match against AI, default # of rows"),
-  ReqBody3 = lsl_json:encode(#{rival => lsl_ai_dumb}),
+  ReqBody3 = sr_json:encode(#{rival => lsl_ai_dumb}),
   #{status_code := 201,
            body := Body3} =
     lsl_test_utils:api_call(post, "/matches", Headers, ReqBody3),
@@ -245,10 +245,10 @@ post_matches_ok(Config) ->
                     ]
    , <<"current-player">> := PlayerId
    , <<"status">> := <<"playing">>
-   } = lsl_json:decode(Body3),
+   } = sr_json:decode(Body3),
 
   ct:comment("Start a match against AI player, 2 rows"),
-  ReqBody4 = lsl_json:encode(#{rival => lsl_ai_rodolfo}),
+  ReqBody4 = sr_json:encode(#{rival => lsl_ai_rodolfo}),
   #{status_code := 201,
            body := Body4} =
     lsl_test_utils:api_call(post, "/matches", Headers, ReqBody4),
@@ -260,7 +260,7 @@ post_matches_ok(Config) ->
                     ]
    , <<"current-player">> := PlayerId
    , <<"status">> := <<"playing">>
-   } = lsl_json:decode(Body4),
+   } = sr_json:decode(Body4),
   case Id4 of
     Id3 -> ct:fail("Duplicated game");
     Id4 -> ok
@@ -341,7 +341,7 @@ get_matches_ok(Config) ->
   #{status_code := 200,
            body := EmptyBody} =
     lsl_test_utils:api_call(get, "/matches", Headers),
-  [] = lsl_json:decode(EmptyBody),
+  [] = sr_json:decode(EmptyBody),
 
   ct:comment("A match that doesn't include player1 is created"),
   _ = lsl:start_match(Rival, lsl_ai_dumb, 5),
@@ -367,7 +367,7 @@ get_matches_ok(Config) ->
      , <<"current-player">> := PlayerId
      , <<"status">> := <<"playing">>
      } = Match1
-  ] = lsl_json:decode(Body1),
+  ] = sr_json:decode(Body1),
 
   ct:comment("A match with player1 as rival is created"),
   M2Id = lsl_matches:id(lsl:start_match(Rival, PlayerId, 3)),
@@ -385,7 +385,7 @@ get_matches_ok(Config) ->
      , <<"current-player">> := PlayerId
      , <<"status">> := <<"playing">>
      }
-  ] = lsl_json:decode(Body2) -- [Match1],
+  ] = sr_json:decode(Body2) -- [Match1],
 
   {comment, ""}.
 
@@ -422,7 +422,7 @@ get_matches_status_ok(Config) ->
       #{status_code := 200,
                body := Body} =
         lsl_test_utils:api_call(get, "/matches?status=" ++ Status, Hs),
-      lists:sort([MatchId || #{<<"id">> := MatchId} <- lsl_json:decode(Body)])
+      lists:sort([MatchId || #{<<"id">> := MatchId} <- sr_json:decode(Body)])
     end,
 
   ct:comment("GET /matches?status=all returns all of them"),
@@ -541,7 +541,7 @@ get_match_ok(Config) ->
                     ]
    , <<"current-player">> := PlayerId
    , <<"status">> := <<"playing">>
-   } = lsl_json:decode(Body1),
+   } = sr_json:decode(Body1),
 
   #{status_code := 200,
            body := Body2} =
@@ -555,7 +555,7 @@ get_match_ok(Config) ->
                     ]
    , <<"current-player">> := PlayerId
    , <<"status">> := <<"playing">>
-   } = lsl_json:decode(Body2),
+   } = sr_json:decode(Body2),
 
   {comment, ""}.
 
@@ -628,40 +628,40 @@ patch_match_wrong(Config) ->
   #{status_code := 400,
            body := Body0} =
     lsl_test_utils:api_call(patch, MatchUrl, Headers, "{"),
-  #{<<"error">> := <<"invalid json">>} = lsl_json:decode(Body0),
+  #{<<"error">> := <<"invalid json">>} = sr_json:decode(Body0),
 
   ct:comment("No row fails"),
   #{status_code := 400,
            body := Body00} =
     lsl_test_utils:api_call(patch, MatchUrl, Headers, "{}"),
-  #{<<"error">> := <<"missing field: row">>} = lsl_json:decode(Body00),
+  #{<<"error">> := <<"missing field: row">>} = sr_json:decode(Body00),
 
   ct:comment("No col fails"),
-  ReqBody1 = lsl_json:encode(#{row => 1}),
+  ReqBody1 = sr_json:encode(#{row => 1}),
   #{status_code := 400,
            body := Body1} =
     lsl_test_utils:api_call(patch, MatchUrl, Headers, ReqBody1),
-  #{<<"error">> := <<"missing field: col">>} = lsl_json:decode(Body1),
+  #{<<"error">> := <<"missing field: col">>} = sr_json:decode(Body1),
 
   ct:comment("No length fails"),
-  ReqBody2 = lsl_json:encode(#{row => 1, col => 1}),
+  ReqBody2 = sr_json:encode(#{row => 1, col => 1}),
   #{status_code := 400,
            body := Body2} =
     lsl_test_utils:api_call(patch, MatchUrl, Headers, ReqBody2),
-  #{<<"error">> := <<"missing field: length">>} = lsl_json:decode(Body2),
+  #{<<"error">> := <<"missing field: length">>} = sr_json:decode(Body2),
 
   ct:comment("Invalid row fails"),
-  ReqBody3 = lsl_json:encode(#{col => 1, row => false, length => 1}),
+  ReqBody3 = sr_json:encode(#{col => 1, row => false, length => 1}),
   #{status_code := 400,
            body := Body3} =
     lsl_test_utils:api_call(patch, MatchUrl, Headers, ReqBody3),
-  #{<<"error">> := <<"invalid field: row">>} = lsl_json:decode(Body3),
+  #{<<"error">> := <<"invalid field: row">>} = sr_json:decode(Body3),
 
-  ReqBody4 = lsl_json:encode(#{col => 1, row => 20, length => 1}),
+  ReqBody4 = sr_json:encode(#{col => 1, row => 20, length => 1}),
   #{status_code := 400,
            body := Body4} =
     lsl_test_utils:api_call(patch, MatchUrl, Headers, ReqBody4),
-  #{<<"error">> := <<"out of bounds">>} = lsl_json:decode(Body4),
+  #{<<"error">> := <<"out of bounds">>} = sr_json:decode(Body4),
 
   ct:comment("PATCH with wrong match fails"),
   #{status_code := 404} =
@@ -706,7 +706,7 @@ patch_match_ok(Config) ->
   AIMatchUrl = "/matches/" ++ binary_to_list(AIMatchId),
 
   ct:comment("PATCHing a game actually crosses the sticks"),
-  ReqBody1 = lsl_json:encode(#{row => 3, col => 2, length => 2}),
+  ReqBody1 = sr_json:encode(#{row => 3, col => 2, length => 2}),
   #{status_code := 200,
            body := Body1} =
     lsl_test_utils:api_call(patch, MatchUrl, Headers, ReqBody1),
@@ -718,10 +718,10 @@ patch_match_ok(Config) ->
                     ]
    , <<"current-player">> := Rival
    , <<"status">> := <<"playing">>
-   } = lsl_json:decode(Body1),
+   } = sr_json:decode(Body1),
 
   ct:comment("AI plays automatically"),
-  ReqBody2 = lsl_json:encode(#{row => 2, col => 1, length => 2}),
+  ReqBody2 = sr_json:encode(#{row => 2, col => 1, length => 2}),
   #{status_code := 200,
            body := Body2} =
     lsl_test_utils:api_call(patch, AIMatchUrl, Headers, ReqBody2),
@@ -733,7 +733,7 @@ patch_match_ok(Config) ->
                     ]
    , <<"current-player">> := PlayerId
    , <<"status">> := <<"playing">>
-   } = lsl_json:decode(Body2),
+   } = sr_json:decode(Body2),
 
   {comment, ""}.
 

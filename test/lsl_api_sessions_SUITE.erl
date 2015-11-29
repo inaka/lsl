@@ -118,7 +118,7 @@ post_sessions_ok(Config) ->
 
   #{ <<"token">> := Token1
    , <<"secret">> := Secret1
-   } = lsl_json:decode(RespBody),
+   } = sr_json:decode(RespBody),
 
   ct:comment("Create another session"),
   #{status_code := 201,
@@ -127,7 +127,7 @@ post_sessions_ok(Config) ->
 
   #{ <<"token">> := Token2
    , <<"secret">> := Secret2
-   } = lsl_json:decode(RespBody2),
+   } = sr_json:decode(RespBody2),
   case Token2 of
     Token1 -> ct:fail("Duplicated Token: ~p", [Token2]);
     Token2 -> ok

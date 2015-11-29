@@ -72,19 +72,19 @@ post_players_wrong(_Config) ->
   #{status_code := 400,
            body := Body0} =
     lsl_test_utils:api_call(post, "/players", Headers, "{"),
-  #{<<"error">> := <<"invalid json">>} = lsl_json:decode(Body0),
+  #{<<"error">> := <<"invalid json">>} = sr_json:decode(Body0),
 
   ct:comment("No name fails"),
   #{status_code := 400,
            body := Body2} =
     lsl_test_utils:api_call(post, "/players", Headers, "{}"),
-  #{<<"error">> := <<"missing field: name">>} = lsl_json:decode(Body2),
+  #{<<"error">> := <<"missing field: name">>} = sr_json:decode(Body2),
 
   ct:comment("No password fails"),
   #{status_code := 400,
            body := Body3} =
     lsl_test_utils:api_call(post, "/players", Headers, "{\"name\":\"joe\"}"),
-  #{<<"error">> := <<"missing field: password">>} = lsl_json:decode(Body3),
+  #{<<"error">> := <<"missing field: password">>} = sr_json:decode(Body3),
 
   {comment, ""}.
 
@@ -93,7 +93,7 @@ post_players_conflict(_Config) ->
   ct:comment("First create a user"),
   Headers = #{<<"content-type">> => <<"application/json">>},
   Body =
-    lsl_json:encode(
+    sr_json:encode(
       #{name => <<"test-conflict-player">>, password => <<"ap455w0rd">>}),
   #{status_code := 201} =
     lsl_test_utils:api_call(post, "/players", Headers, Body),
@@ -104,7 +104,7 @@ post_players_conflict(_Config) ->
 
   ct:comment("Even with different password"),
   Body2 =
-    lsl_json:encode(
+    sr_json:encode(
       #{name => <<"test-conflict-player">>, password => <<"another-1">>}),
   #{status_code := 409} =
     lsl_test_utils:api_call(post, "/players", Headers, Body2),
@@ -120,7 +120,7 @@ post_players_ok(_Config) ->
   ct:comment("Create the player"),
   Headers = #{<<"content-type">> => <<"application/json">>},
   Body =
-    lsl_json:encode(
+    sr_json:encode(
       #{name => <<"test-ok-player">>, password => <<"ap455w0rd">>}),
   #{status_code := 201,
            body := RespBody} =
@@ -129,12 +129,12 @@ post_players_ok(_Config) ->
   RespMap =
     #{ <<"id">> := Id1
      , <<"name">> := <<"test-ok-player">>
-     } = lsl_json:decode(RespBody),
+     } = sr_json:decode(RespBody),
   false = maps:is_key(<<"password">>, RespMap),
 
   ct:comment("Create another player"),
   Body2 =
-    lsl_json:encode(
+    sr_json:encode(
       #{name => <<"test-ok-player-2">>, password => <<"ap455w0rd">>}),
   #{status_code := 201,
            body := RespBody2} =
@@ -142,7 +142,7 @@ post_players_ok(_Config) ->
 
   #{ <<"id">> := Id2
    , <<"name">> := <<"test-ok-player-2">>
-   } = lsl_json:decode(RespBody2),
+   } = sr_json:decode(RespBody2),
   case Id2 of
     Id1 -> ct:fail("Duplicated id: ~p", [Id2]);
     Id2 -> ok
@@ -198,7 +198,7 @@ get_players_ok(Config) ->
   #{status_code := 200,
            body := Body1} =
     lsl_test_utils:api_call(get, "/players", Headers),
-  Players1 = lsl_json:decode(Body1),
+  Players1 = sr_json:decode(Body1),
   [_] =
     [Id || #{<<"id">> := Id, <<"name">> := <<"get_players_ok">>} <- Players1],
   [] = [Pwd || #{<<"password">> := Pwd} <- Players1],
@@ -208,7 +208,7 @@ get_players_ok(Config) ->
   #{status_code := 200,
            body := Body2} =
     lsl_test_utils:api_call(get, "/players", Headers),
-  Players2 = lsl_json:decode(Body2),
+  Players2 = sr_json:decode(Body2),
   [#{<<"name">> := <<"get_players_ok-2">>}] = Players2 -- Players1,
 
   {comment, ""}.
@@ -262,7 +262,7 @@ get_ai_players_ok(Config) ->
   #{status_code := 200,
            body := Body1} =
     lsl_test_utils:api_call(get, "/ai-players", Headers),
-  Players1 = lsl_json:decode(Body1),
+  Players1 = sr_json:decode(Body1),
   [_] =
     [Name || #{<<"id">> := <<"lsl_ai_dumb">>, <<"name">> := Name} <- Players1
          , Name == DumbAIName

@@ -26,5 +26,5 @@ returns_ok(_Config) ->
            body := Body} = lsl_test_utils:api_call(get, "/status"),
 
   ct:comment("GET /status should return {'status': 'ok'}"),
-  #{<<"status">> := <<"ok">>} = lsl_json:decode(Body),
+  #{<<"status">> := <<"ok">>} = sr_json:decode(Body),
   {comment, ""}.

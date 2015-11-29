@@ -2,29 +2,60 @@
 -module(lsl_matches_handler).
 -author('elbrujohalcon@inaka.net').
 
+-behaviour(trails_handler).
+
 -include_lib("mixer/include/mixer.hrl").
 -mixin([
-        {lsl_base_handler,
+        {sr_entities_handler,
          [ init/3
          , rest_init/2
-         , is_authorized/2
+         , allowed_methods/2
          , content_types_accepted/2
          , content_types_provided/2
          , resource_exists/2
          ]}
        ]).
 
--export([ allowed_methods/2
+-export([ is_authorized/2
         , handle_post/2
         , handle_get/2
+        , trails/0
         ]).
 
--type state() :: lsl_base_handler:state().
+-type state() :: sr_entities_handler:state().
 
--spec allowed_methods(cowboy_req:req(), state()) ->
-  {[binary()], cowboy_req:req(), state()}.
-allowed_methods(Req, State) ->
-  {[<<"POST">>, <<"GET">>], Req, State}.
+-spec trails() -> trails:trails().
+trails() ->
+  RequestBody =
+    #{ name => <<"request body">>
+     , in => body
+     , description => <<"request body (as json)">>
+     , required => true
+     },
+  Metadata =
+    #{ get =>
+       #{ tags => ["matches"]
+        , description => "Returns the list of matches"
+        , produces => ["application/json"]
+        }
+     , post =>
+       #{ tags => ["matches"]
+        , description => "Creates a new match"
+        , consumes => ["application/json"]
+        , produces => ["application/json"]
+        , parameters => [RequestBody]
+        }
+     },
+  Path = "/matches",
+  Opts = #{ path => Path
+          , model => lsl_matches
+          },
+  [trails:trail(Path, ?MODULE, Opts, Metadata)].
+
+-spec is_authorized(cowboy_req:req(), state()) ->
+  {true | {false, binary()}, cowboy_req:req(), state()}.
+is_authorized(Req, State) ->
+  lsl_base_handler:is_authorized([session], Req, State).
 
 -spec handle_post(cowboy_req:req(), state()) ->
     {halt | {boolean(), binary()}, cowboy_req:req(), state()}.
@@ -41,7 +72,7 @@ handle_post(Req, State) ->
           lsl:start_match(PlayerId, AI, Rows)
       end,
     MatchId = lsl_matches:id(Match),
-    RespBody = lsl_json:encode(lsl_matches:to_json(Match, PlayerId)),
+    RespBody = sr_json:encode(lsl_matches:to_json(Match, PlayerId)),
     Req2 = cowboy_req:set_resp_body(RespBody, Req1),
     {{true, <<"/matches/", MatchId/binary>>}, Req2, State}
   catch
@@ -49,6 +80,7 @@ handle_post(Req, State) ->
       lsl_web_utils:handle_exception(Exception, Req, State)
   end.
 
+%% @todo remove when https://github.com/inaka/sumo_rest/issues/8 is fixed
 -spec handle_get(cowboy_req:req(), state()) ->
     {iodata(), cowboy_req:req(), state()}.
 handle_get(Req, State) ->
@@ -57,7 +89,7 @@ handle_get(Req, State) ->
     {QsStatus, Req1} = cowboy_req:qs_val(<<"status">>, Req, <<"all">>),
     Status = parse_qs(QsStatus),
     RespBody =
-      lsl_json:encode(
+      sr_json:encode(
         [ lsl_matches:to_json(Match, lsl_players:id(Player))
         || Match <- lsl:find_matches(Player, Status)
         ]),
@@ -68,7 +100,7 @@ handle_get(Req, State) ->
   end.
 
 parse_body(Body) ->
-  Json = lsl_json:decode(Body),
+  Json = sr_json:decode(Body),
   DefaultRows = application:get_env(lsl, default_rows, 5),
   case { maps:get(<<"rival">>, Json, null)
        , maps:get(<<"rows">>, Json, DefaultRows)

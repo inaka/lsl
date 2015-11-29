@@ -1,38 +1,69 @@
 %%% @doc /matches/:match_id handler
--module(lsl_match_handler).
+-module(lsl_single_match_handler).
 -author('elbrujohalcon@inaka.net').
 
--include_lib("mixer/include/mixer.hrl").
--mixin([
-        {lsl_base_handler,
-         [ init/3
-         , rest_init/2
-         , is_authorized/2
-         , content_types_accepted/2
-         , content_types_provided/2
-         ]}
-       ]).
+-behaviour(trails_handler).
 
--export([ allowed_methods/2
-        , forbidden/2
-        , resource_exists/2
-        , handle_get/2
+-include_lib("mixer/include/mixer.hrl").
+-mixin([{ sr_single_entity_handler
+        , [ init/3
+          , rest_init/2
+          , allowed_methods/2
+          , resource_exists/2
+          , content_types_accepted/2
+          , content_types_provided/2
+          , handle_get/2
+          , delete_resource/2
+          ]
+        }]).
+
+-export([ forbidden/2
         , handle_patch/2
-        , delete_resource/2
+        , trails/0
         ]).
 
--type state() :: lsl_base_handler:state().
+-type state() :: sr_single_entity_handler:state().
 
--spec allowed_methods(cowboy_req:req(), state()) ->
-  {[binary()], cowboy_req:req(), state()}.
-allowed_methods(Req, State) ->
-  {[<<"GET">>, <<"PATCH">>, <<"DELETE">>], Req, State}.
-
--spec resource_exists(cowboy_req:req(), term()) ->
-  {boolean(), cowboy_req:req(), term()}.
-resource_exists(Req, State) ->
-  #{binding := MatchId} = State,
-  {lsl:is_match(MatchId), Req, State}.
+-spec trails() -> trails:trails().
+trails() ->
+  RequestBody =
+    #{ name => <<"request body">>
+     , in => body
+     , description => <<"request body (as json)">>
+     , required => true
+     },
+  Id =
+    #{ name => id
+     , in => path
+     , description => <<"Match Id">>
+     , required => true
+     , type => string
+     },
+  Metadata =
+    #{ get =>
+       #{ tags => ["matches"]
+        , description => "Returns an match"
+        , produces => ["application/json"]
+        , parameters => [Id]
+        }
+     , patch =>
+       #{ tags => ["matches"]
+        , description => "Registers your move"
+        , consumes => ["application/json"]
+        , produces => ["application/json"]
+        , parameters => [RequestBody, Id]
+        }
+     , delete =>
+       #{ tags => ["matches"]
+        , description => "Deletes an match"
+        , parameters => [Id]
+        }
+     },
+  Path = "/matches/:id",
+  Opts = #{ path => Path
+          , model => sr_matches
+          },
+  [trails:trail(Path, ?MODULE, Opts, Metadata)].
 
 -spec forbidden(cowboy_req:req(), state()) ->
   {boolean() | halt, cowboy_req:req(), state()}.
@@ -62,7 +93,7 @@ handle_patch(Req, State) ->
     {ok, Body, Req1} = cowboy_req:body(Req),
     {Row, Col, Length} = parse_body(Body),
     Match = lsl:play(MatchId, PlayerId, Row, Col, Length),
-    RespBody = lsl_json:encode(lsl_matches:to_json(Match, PlayerId)),
+    RespBody = sr_json:encode(lsl_matches:to_json(Match, PlayerId)),
     Req2 = cowboy_req:set_resp_body(RespBody, Req1),
     {true, Req2, State}
   catch
@@ -70,29 +101,8 @@ handle_patch(Req, State) ->
       lsl_web_utils:handle_exception(Exception, Req, State)
   end.
 
--spec handle_get(cowboy_req:req(), state()) ->
-  {iodata(), cowboy_req:req(), state()}.
-handle_get(Req, State) ->
-  #{binding := MatchId, player := Player} = State,
-  try
-    Match = lsl:fetch_match(MatchId),
-    RespBody =
-      lsl_json:encode(lsl_matches:to_json(Match, lsl_players:id(Player))),
-    {RespBody, Req, State}
-  catch
-    _:Exception ->
-      lsl_web_utils:handle_exception(Exception, Req, State)
-  end.
-
--spec delete_resource(cowboy_req:req(), state()) ->
-  {boolean(), cowboy_req:req(), state()}.
-delete_resource(Req, State) ->
-  #{binding := MatchId} = State,
-  Response = lsl:stop_match(MatchId),
-  {Response, Req, State}.
-
 parse_body(Body) ->
-  Json = lsl_json:decode(Body),
+  Json = sr_json:decode(Body),
   case { maps:get(<<"row">>,    Json, null)
        , maps:get(<<"col">>,    Json, null)
        , maps:get(<<"length">>, Json, null)

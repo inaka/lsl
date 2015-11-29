@@ -64,22 +64,22 @@ start_phase(start_cowboy_listeners, _StartType, []) ->
   Port = application:get_env(lsl, http_port, 8383),
   ListenerCount = application:get_env(lsl, http_listener_count, 10),
 
-  Routes =
-    [{'_',
-      [ {"/status", lsl_status_handler,  []}
-      , {"/players", lsl_players_handler, []}
-      , {"/ai-players", lsl_ai_players_handler, []}
-      , {"/sessions/:session_token", lsl_session_handler, []}
-      , {"/sessions", lsl_sessions_handler, []}
-      , {"/matches/:match_id", lsl_match_handler, []}
-      , {"/matches", lsl_matches_handler, []}
-      ]
-     }
+  Handlers =
+    [ lsl_status_handler
+    , lsl_players_handler
+    , lsl_ai_players_handler
+    , lsl_single_session_handler
+    , lsl_sessions_handler
+    , lsl_single_match_handler
+    , cowboy_swagger_handler
     ],
-  Dispatch = cowboy_router:compile(Routes),
-  case cowboy:start_http(
-        lsl_http_listener, ListenerCount, [{port, Port}],
-        [{env, [{dispatch, Dispatch}]}]) of
+  Routes = trails:trails(Handlers),
+  trails:store(Routes),
+  Dispatch = trails:single_host_compile(Routes),
+
+  TransOpts = [{port, Port}],
+  ProtoOpts = [{env, [{dispatch, Dispatch}, {compress, true}]}],
+  case cowboy:start_http(lsl_server, ListenerCount, TransOpts, ProtoOpts) of
     {ok, _} -> ok;
     {error, {already_started, _}} -> ok
   end.

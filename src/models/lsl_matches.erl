@@ -3,6 +3,7 @@
 -author('elbrujohalcon@inaka.net').
 
 -behaviour(sumo_doc).
+-behaviour(sumo_rest_doc).
 
 -opaque match() ::
   #{ id => binary()
@@ -20,6 +21,7 @@
 
 -export([new/4, to_json/2]).
 -export([sumo_schema/0, sumo_wakeup/1, sumo_sleep/1]).
+-export([to_json/1, from_json/1, update/2, uri_path/1]).
 -export([ id/1
         , core/1
         , core/2
@@ -75,6 +77,18 @@ sumo_wakeup(Doc) ->
                  end
       , core := binary_to_term(Core)
       }.
+
+-spec to_json(match()) -> sumo_rest_doc:json().
+to_json(Match) -> to_json(Match, current_player(Match)).
+
+-spec from_json(sumo_rest_doc:json()) -> no_return().
+from_json(_Json) -> throw(no_simple_parsing).
+
+-spec update(match(), sumo_rest_doc:json()) -> no_return().
+update(_Match, _Changes) -> throw(no_simple_parsing).
+
+-spec uri_path(match()) -> iodata().
+uri_path(Match) -> id(Match).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PUBLIC API
