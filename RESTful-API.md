@@ -190,7 +190,7 @@ Basic Auth with session token and secret
 ```
 
 #### ``DELETE /matches/:match_id``
-To invalidate temporary tokens
+Closes a game
 ##### Authentication
 Basic Auth with session token and secret
 ##### Parameters
