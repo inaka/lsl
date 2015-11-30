@@ -67,17 +67,8 @@ register_player(Name) -> register_player(Name, <<"pwd">>).
 
 -spec register_player(binary(), binary()) -> lsl_players:player().
 register_player(Name, Password) ->
-  try lsl:register_player(Name, Password)
-  catch
-    throw:conflict ->
-      case lsl:fetch_player(Name, Password) of
-        notfound ->
-          sumo:delete_by(lsl_players, [{name, Name}]),
-          register_player(Name, Password);
-        Player -> Player
-      end
-  end.
+  sumo:persist(lsl_players, lsl_players:new(Name, Password)).
 
 -spec open_session(lsl_players:player()) -> lsl_sessions:session().
 open_session(Player) ->
-  lsl:open_session(lsl_players:id(Player)).
+  sumo:persist(lsl_sessions, lsl_sessions:new(lsl_players:id(Player))).

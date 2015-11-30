@@ -1,15 +1,17 @@
 %% Specific modules to include in cover.
 {
  incl_mods,
- [ lsl
- , lsl_core
- , lsl_ai
- , lsl_ai_dumb
+ [ lsl_ai_dumb
  , lsl_ai_rodolfo
- , lsl_base_handler
+ , lsl
+ , lsl_core
+ , lsl_ai_players_handler
+ , lsl_auth
  , lsl_matches_handler
  , lsl_players_handler
  , lsl_sessions_handler
+ , lsl_single_match_handler
+ , lsl_single_session_handler
  , lsl_status_handler
  , lsl_matches
  , lsl_matches_repo
@@ -17,7 +19,8 @@
  , lsl_players_repo
  , lsl_sessions
  , lsl_sessions_repo
- , lsl_json
+ , lsl_crypto
  , lsl_web_utils
+ , lsl_ai
  ]
 }.

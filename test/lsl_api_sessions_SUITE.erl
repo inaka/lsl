@@ -9,18 +9,6 @@
          ]}
        ]).
 
--ignore_xref([ all/0
-             , init_per_suite/1
-             , end_per_suite/1
-             , init_per_testcase/2
-             , end_per_testcase/2
-             ]).
--ignore_xref([ post_sessions_wrong/1
-             , post_sessions_ok/1
-             , delete_sessions_wrong/1
-             , delete_sessions_ok/1
-             ]).
-
 -export([ all/0
         , init_per_testcase/2
         , end_per_testcase/2
@@ -58,11 +46,11 @@ end_per_testcase(_TestCase, Config) ->
   sumo:delete(lsl_players, lsl_players:id(Player1)),
   {value, {player2, Player2}, Config2} = lists:keytake(player2, 1, Config1),
   sumo:delete(lsl_players, lsl_players:id(Player2)),
-  {value, {sessiona, SessionA}, Config3} = lists:keytake(session1, 1, Config2),
+  {value, {sessiona, SessionA}, Config3} = lists:keytake(sessiona, 1, Config2),
   lsl:close_session(lsl_sessions:token(SessionA)),
-  {value, {sessionb, SessionB}, Config4} = lists:keytake(session1, 1, Config3),
+  {value, {sessionb, SessionB}, Config4} = lists:keytake(sessionb, 1, Config3),
   lsl:close_session(lsl_sessions:token(SessionB)),
-  {value, {session2, Session2}, Config5} = lists:keytake(session1, 1, Config4),
+  {value, {session2, Session2}, Config5} = lists:keytake(session2, 1, Config4),
   lsl:close_session(lsl_sessions:token(Session2)),
   Config5.
 
@@ -118,7 +106,7 @@ post_sessions_ok(Config) ->
 
   #{ <<"token">> := Token1
    , <<"secret">> := Secret1
-   } = lsl_json:decode(RespBody),
+   } = sr_json:decode(RespBody),
 
   ct:comment("Create another session"),
   #{status_code := 201,
@@ -127,7 +115,7 @@ post_sessions_ok(Config) ->
 
   #{ <<"token">> := Token2
    , <<"secret">> := Secret2
-   } = lsl_json:decode(RespBody2),
+   } = sr_json:decode(RespBody2),
   case Token2 of
     Token1 -> ct:fail("Duplicated Token: ~p", [Token2]);
     Token2 -> ok
@@ -222,11 +210,11 @@ delete_sessions_ok(Config) ->
 
   ct:comment("DELETE with name/pwd"),
   #{status_code := 204} = lsl_test_utils:api_call(delete, Url2, Headers2),
-  #{status_code := 204} = lsl_test_utils:api_call(delete, Url2, Headers2),
+  #{status_code := 404} = lsl_test_utils:api_call(delete, Url2, Headers2),
 
   ct:comment("DELETE other session with token/secret"),
   #{status_code := 204} = lsl_test_utils:api_call(delete, UrlB, Headers1),
-  #{status_code := 204} = lsl_test_utils:api_call(delete, UrlB, Headers1),
+  #{status_code := 404} = lsl_test_utils:api_call(delete, UrlB, Headers1),
 
   ct:comment("DELETE same session with token/secret"),
   #{status_code := 204} = lsl_test_utils:api_call(delete, Url1, Headers1),

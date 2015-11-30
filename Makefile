@@ -2,7 +2,7 @@ PROJECT = lsl
 
 CONFIG ?= test/test.config
 
-DEPS = eper mixer lager cowboy jiffy sumo katana erlpass sumo_rest
+DEPS = eper mixer lager cowboy jiffy sumo katana erlpass swagger trails sumo_rest
 SELL_DEPS = sync
 TEST_DEPS = xref_runner shotgun
 
@@ -16,7 +16,9 @@ dep_eper        = git https://github.com/massemanet/eper.git       0.96.4
 dep_mixer       = git https://github.com/inaka/mixer.git           0.1.4
 dep_sync        = git https://github.com/rustyio/sync.git          9c78e7b
 dep_shotgun     = git https://github.com/inaka/shotgun.git         0.1.12
-dep_sumo_rest   = git https://github.com/inaka/sumo_rest.git       0.0.1
+dep_sumo_rest   = git https://github.com/inaka/sumo_rest.git       a2b18f3
+dep_swagger     = git https://github.com/inaka/cowboy-swagger.git  1f81947
+dep_trails      = git https://github.com/inaka/cowboy-trails.git   0.1.0
 dep_xref_runner = git https://github.com/inaka/xref_runner.git     0.2.2
 
 LOCAL_DEPS := tools compiler syntax_tools common_test inets test_server dialyzer wx mnesia crypto

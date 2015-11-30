@@ -14,18 +14,7 @@ secret() ->
 -spec hash(binary()) -> binary().
 hash(Value) -> erlpass:hash([Value]).
 
-%% @doc Sometimes, bcrypt fails to hash, causing lsl_crypto:match to fail,
-%%      so we try 5 times in a row.
+%% @equiv erlpass:match(Password, PasswordHash).
 -spec match(binary(), binary()) -> boolean().
 match(Password, PasswordHash) ->
-  match(5, Password, PasswordHash).
-
-match(1, Password, PasswordHash) ->
-  erlpass:match([Password], PasswordHash);
-match(N, Password, PasswordHash) ->
-  try
-    erlpass:match([Password], PasswordHash)
-  catch
-    _:_ ->
-      match(N - 1, Password, PasswordHash)
-  end.
+  erlpass:match([Password], PasswordHash).

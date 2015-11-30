@@ -9,10 +9,6 @@
          ]}
        ]).
 
--ignore_xref([all/0]).
--ignore_xref([init_per_suite/1, end_per_suite/1]).
--ignore_xref([returns_ok/1]).
-
 -export([all/0]).
 -export([returns_ok/1]).
 
@@ -26,5 +22,5 @@ returns_ok(_Config) ->
            body := Body} = lsl_test_utils:api_call(get, "/status"),
 
   ct:comment("GET /status should return {'status': 'ok'}"),
-  #{<<"status">> := <<"ok">>} = lsl_json:decode(Body),
+  #{<<"status">> := <<"ok">>} = sr_json:decode(Body),
   {comment, ""}.
