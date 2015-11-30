@@ -25,7 +25,7 @@ handle_exception({invalid_field, Field}, Req, State) ->
 handle_exception(conflict, Req, State) ->
   {ok, Req1} = cowboy_req:reply(409, Req),
   {halt, Req1, State};
-handle_exception(bad_json, Req, State) ->
+handle_exception(badjson, Req, State) ->
   Response = sr_json:encode(#{error => <<"invalid json">>}),
   halt(Response, Req, State);
 handle_exception(out_of_bounds, Req, State) ->

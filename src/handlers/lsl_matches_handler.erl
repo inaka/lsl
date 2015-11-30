@@ -49,6 +49,7 @@ trails() ->
   Path = "/matches",
   Opts = #{ path => Path
           , model => lsl_matches
+          , verbose => true
           },
   [trails:trail(Path, ?MODULE, Opts, Metadata)].
 

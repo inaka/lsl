@@ -58,11 +58,11 @@ end_per_testcase(_TestCase, Config) ->
   sumo:delete(lsl_players, lsl_players:id(Player1)),
   {value, {player2, Player2}, Config2} = lists:keytake(player2, 1, Config1),
   sumo:delete(lsl_players, lsl_players:id(Player2)),
-  {value, {sessiona, SessionA}, Config3} = lists:keytake(session1, 1, Config2),
+  {value, {sessiona, SessionA}, Config3} = lists:keytake(sessiona, 1, Config2),
   lsl:close_session(lsl_sessions:token(SessionA)),
-  {value, {sessionb, SessionB}, Config4} = lists:keytake(session1, 1, Config3),
+  {value, {sessionb, SessionB}, Config4} = lists:keytake(sessionb, 1, Config3),
   lsl:close_session(lsl_sessions:token(SessionB)),
-  {value, {session2, Session2}, Config5} = lists:keytake(session1, 1, Config4),
+  {value, {session2, Session2}, Config5} = lists:keytake(session2, 1, Config4),
   lsl:close_session(lsl_sessions:token(Session2)),
   Config5.
 
@@ -222,11 +222,11 @@ delete_sessions_ok(Config) ->
 
   ct:comment("DELETE with name/pwd"),
   #{status_code := 204} = lsl_test_utils:api_call(delete, Url2, Headers2),
-  #{status_code := 204} = lsl_test_utils:api_call(delete, Url2, Headers2),
+  #{status_code := 404} = lsl_test_utils:api_call(delete, Url2, Headers2),
 
   ct:comment("DELETE other session with token/secret"),
   #{status_code := 204} = lsl_test_utils:api_call(delete, UrlB, Headers1),
-  #{status_code := 204} = lsl_test_utils:api_call(delete, UrlB, Headers1),
+  #{status_code := 404} = lsl_test_utils:api_call(delete, UrlB, Headers1),
 
   ct:comment("DELETE same session with token/secret"),
   #{status_code := 204} = lsl_test_utils:api_call(delete, Url1, Headers1),

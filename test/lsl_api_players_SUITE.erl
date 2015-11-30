@@ -69,22 +69,16 @@ post_players_wrong(_Config) ->
   #{status_code := 400} = lsl_test_utils:api_call(post, "/players", Headers),
 
   ct:comment("Broken json fails"),
-  #{status_code := 400,
-           body := Body0} =
+  #{status_code := 400} =
     lsl_test_utils:api_call(post, "/players", Headers, "{"),
-  #{<<"error">> := <<"invalid json">>} = sr_json:decode(Body0),
 
   ct:comment("No name fails"),
-  #{status_code := 400,
-           body := Body2} =
+  #{status_code := 400} =
     lsl_test_utils:api_call(post, "/players", Headers, "{}"),
-  #{<<"error">> := <<"missing field: name">>} = sr_json:decode(Body2),
 
   ct:comment("No password fails"),
-  #{status_code := 400,
-           body := Body3} =
+  #{status_code := 400} =
     lsl_test_utils:api_call(post, "/players", Headers, "{\"name\":\"joe\"}"),
-  #{<<"error">> := <<"missing field: password">>} = sr_json:decode(Body3),
 
   {comment, ""}.
 

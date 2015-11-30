@@ -63,6 +63,7 @@ trails() ->
   Path = "/matches/:id",
   Opts = #{ path => Path
           , model => lsl_matches
+          , verbose => true
           },
   [trails:trail(Path, ?MODULE, Opts, Metadata)].
 
@@ -74,11 +75,10 @@ is_authorized(Req, State) ->
 -spec forbidden(cowboy_req:req(), state()) ->
   {boolean() | halt, cowboy_req:req(), state()}.
 forbidden(Req, State) ->
-  {MatchId, Req1} = cowboy_req:binding(match_id, Req),
-  #{player := Player} = State,
+  #{player := Player, id := MatchId} = State,
   PlayerId = lsl_players:id(Player),
-  {Forbidden, Req2} =
-    case cowboy_req:method(Req1) of
+  {Forbidden, Req1} =
+    case cowboy_req:method(Req) of
       {<<"PATCH">>, NewReq} ->
         { lsl:is_match(MatchId) and not lsl:is_current_player(MatchId, PlayerId)
         , NewReq
@@ -88,13 +88,13 @@ forbidden(Req, State) ->
         , NewReq
         }
     end,
-  {Forbidden, Req2, State#{binding => MatchId}}.
+  {Forbidden, Req1, State}.
 
 -spec handle_patch(cowboy_req:req(), state()) ->
     {halt | {boolean(), binary()}, cowboy_req:req(), state()}.
 handle_patch(Req, State) ->
   try
-    #{player := Player, binding := MatchId} = State,
+    #{player := Player, id := MatchId} = State,
     PlayerId = lsl_players:id(Player),
     {ok, Body, Req1} = cowboy_req:body(Req),
     {Row, Col, Length} = parse_body(Body),

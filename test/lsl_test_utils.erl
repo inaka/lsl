@@ -80,4 +80,4 @@ register_player(Name, Password) ->
 
 -spec open_session(lsl_players:player()) -> lsl_sessions:session().
 open_session(Player) ->
-  lsl:open_session(lsl_players:id(Player)).
+  sumo:persist(lsl_sessions, lsl_sessions:new(lsl_players:id(Player))).

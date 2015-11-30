@@ -42,6 +42,7 @@ trails() ->
   Path = "/sessions/:id",
   Opts = #{ path => Path
           , model => lsl_sessions
+          , verbose => true
           },
   [trails:trail(Path, ?MODULE, Opts, Metadata)].
 
@@ -53,12 +54,11 @@ is_authorized(Req, State) ->
 -spec forbidden(cowboy_req:req(), state()) ->
   {boolean() | halt, cowboy_req:req(), state()}.
 forbidden(Req, State) ->
-  {Token, Req1} = cowboy_req:binding(session_token, Req),
+  #{player := Player, id := Token} = State,
   try
-    #{player := Player} = State,
     PlayerId = lsl_players:id(Player),
-    {not lsl:can_close_session(PlayerId, Token), Req1, State#{binding => Token}}
+    {not lsl:can_close_session(PlayerId, Token), Req, State}
   catch
     _:Exception ->
-      lsl_web_utils:handle_exception(Exception, Req1, State#{binding => Token})
+      lsl_web_utils:handle_exception(Exception, Req, State)
   end.

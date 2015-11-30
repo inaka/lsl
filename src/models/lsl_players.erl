@@ -6,12 +6,12 @@
 -behaviour(sumo_rest_doc).
 
 -opaque player() ::
-  #{
-    name => binary(),
-    password_hash => binary(),
-    created_at => dcn_datetime:datetime(),
-    updated_at => dcn_datetime:datetime()
-  }.
+  #{ id => binary()
+   , name => binary()
+   , password_hash => binary()
+   , created_at => binary()
+   , updated_at => binary()
+   }.
 -export_type([player/0]).
 
 -export([new/2]).
@@ -26,10 +26,11 @@
 -spec sumo_schema() -> sumo:schema().
 sumo_schema() ->
   sumo:new_schema(?MODULE,
-    [ sumo:new_field(name,          binary,   [id, not_null])
-    , sumo:new_field(password_hash, binary,   [not_null])
-    , sumo:new_field(created_at,    datetime, [not_null])
-    , sumo:new_field(updated_at,    datetime, [not_null])
+    [ sumo:new_field(id,            binary, [id, not_null])
+    , sumo:new_field(name,          binary, [not_null])
+    , sumo:new_field(password_hash, binary, [not_null])
+    , sumo:new_field(created_at,    binary, [not_null])
+    , sumo:new_field(updated_at,    binary, [not_null])
     ]).
 
 %% @private
@@ -67,10 +68,10 @@ update(Player, Json) ->
   end.
 
 -spec uri_path(player()) -> iodata().
-uri_path(Player) -> name(Player).
+uri_path(Player) -> id(Player).
 
--spec id(player()) -> term().
-id(Player) -> name(Player).
+-spec id(player()) -> binary().
+id(#{id := Id}) -> Id.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PUBLIC API
@@ -79,7 +80,7 @@ id(Player) -> name(Player).
 -spec new(binary(), binary()) -> player().
 new(Name, PasswordHash) ->
   Now = ktn_date:now_human_readable(),
-  #{ id             => undefined
+  #{ id             => Name
    , name           => Name
    , password_hash  => PasswordHash
    , created_at     => Now

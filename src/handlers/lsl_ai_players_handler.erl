@@ -33,7 +33,7 @@ trails() ->
         }
      },
   Path = "/ai-players",
-  Opts = #{path => Path},
+  Opts = #{path => Path, verbose => true},
   [trails:trail(Path, ?MODULE, Opts, Metadata)].
 
 -spec is_authorized(cowboy_req:req(), state()) ->

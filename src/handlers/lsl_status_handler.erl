@@ -32,7 +32,7 @@ trails() ->
         }
      },
   Path = "/status",
-  Opts = #{path => Path},
+  Opts = #{path => Path, verbose => true},
   [trails:trail(Path, ?MODULE, Opts, Metadata)].
 
 -spec handle_get(cowboy_req:req(), state()) ->

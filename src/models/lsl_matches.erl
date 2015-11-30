@@ -11,8 +11,8 @@
    , rival_kind => player | ai
    , rival => atom() | binary()
    , core => lsl_core:match()
-   , created_at => dcn_datetime:datetime()
-   , updated_at => dcn_datetime:datetime()
+   , created_at => binary()
+   , updated_at => binary()
    }.
 -export_type([match/0]).
 
@@ -39,13 +39,13 @@
 -spec sumo_schema() -> sumo:schema().
 sumo_schema() ->
   sumo:new_schema(?MODULE,
-    [ sumo:new_field(id,              binary,   [id, not_null])
-    , sumo:new_field(player_id,       binary,   [not_null])
-    , sumo:new_field(rival_kind,      binary,   [not_null])
-    , sumo:new_field(rival,           binary,   [not_null])
-    , sumo:new_field(core,            binary,   [not_null])
-    , sumo:new_field(created_at,      datetime, [not_null])
-    , sumo:new_field(updated_at,      datetime, [not_null])
+    [ sumo:new_field(id,              binary, [id, not_null])
+    , sumo:new_field(player_id,       binary, [not_null])
+    , sumo:new_field(rival_kind,      binary, [not_null])
+    , sumo:new_field(rival,           binary, [not_null])
+    , sumo:new_field(core,            binary, [not_null])
+    , sumo:new_field(created_at,      binary, [not_null])
+    , sumo:new_field(updated_at,      binary, [not_null])
     ]).
 
 %% @private

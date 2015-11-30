@@ -49,6 +49,7 @@ trails() ->
   Path = "/players",
   Opts = #{ path => Path
           , model => lsl_players
+          , verbose => true
           },
   [trails:trail(Path, ?MODULE, Opts, Metadata)].
 

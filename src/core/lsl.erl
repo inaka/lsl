@@ -14,7 +14,6 @@
 -export([ register_player/2
         , fetch_player/2
         , fetch_player/1
-        , open_session/1
         , close_session/1
         , can_close_session/2
         , fetch_session_player/2
@@ -65,12 +64,13 @@ start_phase(start_cowboy_listeners, _StartType, []) ->
   ListenerCount = application:get_env(lsl, http_listener_count, 10),
 
   Handlers =
-    [ lsl_status_handler
+    [ lsl_ai_players_handler
+    , lsl_matches_handler
     , lsl_players_handler
-    , lsl_ai_players_handler
-    , lsl_single_session_handler
     , lsl_sessions_handler
+    , lsl_single_session_handler
     , lsl_single_match_handler
+    , lsl_status_handler
     , cowboy_swagger_handler
     ],
   Routes = trails:trails(Handlers),
@@ -102,10 +102,6 @@ fetch_player(Name, Password) -> lsl_players_repo:fetch(Name, Password).
 %% @doc Retrieves a player given its id
 -spec fetch_player(binary()) -> lsl_players:player() | notfound.
 fetch_player(PlayerId) -> lsl_players_repo:fetch(PlayerId).
-
-%% @doc Generates a new session for the player
--spec open_session(binary()) -> lsl_sessions:session().
-open_session(PlayerId) -> lsl_sessions_repo:open(PlayerId).
 
 %% @doc Deletes a session
 -spec close_session(binary()) -> boolean().

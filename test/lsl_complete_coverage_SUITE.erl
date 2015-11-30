@@ -26,7 +26,7 @@ all() -> lsl_test_utils:all(?MODULE).
 
 -spec web_utils(lsl_test_utils:config()) -> {comment, []}.
 web_utils(_Config) ->
-  {halt, _, state} = lsl_players_handler:handle_post(req, state),
+  {halt, _, state} = lsl_matches_handler:handle_post(req, state),
   {comment, ""}.
 
 -spec matches_repo(lsl_test_utils:config()) -> {comment, []}.
