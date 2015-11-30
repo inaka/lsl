@@ -10,7 +10,6 @@
          [ init/3
          , rest_init/2
          , allowed_methods/2
-         , content_types_accepted/2
          , content_types_provided/2
          , resource_exists/2
          ]}
@@ -44,12 +43,7 @@ is_authorized(Req, State) ->
 -spec handle_get(cowboy_req:req(), state()) ->
     {iodata(), cowboy_req:req(), state()}.
 handle_get(Req, State) ->
-  try
-    RespBody =
-      sr_json:encode(
-        [lsl_ai:to_json(Player) || Player <- lsl:fetch_ai_players()]),
-    {RespBody, Req, State}
-  catch
-    _:Exception ->
-      lsl_web_utils:handle_exception(Exception, Req, State)
-  end.
+  RespBody =
+    sr_json:encode(
+      [lsl_ai:to_json(Player) || Player <- lsl:fetch_ai_players()]),
+  {RespBody, Req, State}.

@@ -4,11 +4,14 @@
 
 -export([is_authorized/3]).
 
+-type authorization_mechanism() :: none | player | session.
+-export_type([authorization_mechanism/0]).
+
 -type state() :: #{player => undefined | lsl_players:player()}.
 -export_type([state/0]).
 
 -spec is_authorized(
-  [lsl_web_utils:authorization_mechanism(), ...], cowboy_req:req(), state()) ->
+  [authorization_mechanism(), ...], cowboy_req:req(), state()) ->
   {true | {false, binary()}, cowboy_req:req(), state()}.
 is_authorized([DefaultMech|_] = Mechanisms, Req, State) ->
   is_authorized(Mechanisms, DefaultMech, Req, State).

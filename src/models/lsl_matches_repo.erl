@@ -4,12 +4,10 @@
 
 -export([ start/3
         , find/2
-        , fetch/1
         , play/5
         , is_match/1
         , is_playing/2
         , is_current_player/2
-        , stop/1
         ]).
 
 %% @doc Starts a match.
@@ -36,10 +34,6 @@ find(Player, Status) ->
 filter(AllMatches, _PlayerId, all) -> AllMatches;
 filter(AllMatches, PlayerId, Status) ->
   [Match || Match <- AllMatches, lsl_matches:status(Match, PlayerId) == Status].
-
-%% @doc Retrieves a match
--spec fetch(binary()) -> notfound | lsl_matches:match().
-fetch(MatchId) -> sumo:find(lsl_matches, MatchId).
 
 %% @doc Makes a move in a game
 -spec play(
@@ -68,7 +62,6 @@ do_play(Match, _PlayerId, Row, Col, Length) ->
     end,
   sumo:persist(lsl_matches, lsl_matches:core(Match, NewCore)).
 
-
 %% @doc Is this a valid match id?
 -spec is_match(binary()) -> boolean().
 is_match(MatchId) -> notfound =/= sumo:find(lsl_matches, MatchId).
@@ -88,7 +81,3 @@ is_current_player(MatchId, PlayerId) ->
     notfound -> false;
     Match -> PlayerId == lsl_matches:current_player(Match)
   end.
-
-%% @doc Deletes a match
--spec stop(binary()) -> boolean().
-stop(MatchId) -> sumo:delete(lsl_matches, MatchId).

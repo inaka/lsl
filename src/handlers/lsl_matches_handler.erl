@@ -72,7 +72,7 @@ handle_post(Req, State) ->
         {ai, AI, Rows} ->
           lsl:start_match(PlayerId, AI, Rows)
       end,
-    MatchId = lsl_matches:id(Match),
+    MatchId = lsl_matches:uri_path(Match),
     RespBody = sr_json:encode(lsl_matches:to_json(Match, PlayerId)),
     Req2 = cowboy_req:set_resp_body(RespBody, Req1),
     {{true, <<"/matches/", MatchId/binary>>}, Req2, State}

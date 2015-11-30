@@ -55,10 +55,5 @@ is_authorized(Req, State) ->
   {boolean() | halt, cowboy_req:req(), state()}.
 forbidden(Req, State) ->
   #{player := Player, id := Token} = State,
-  try
-    PlayerId = lsl_players:id(Player),
-    {not lsl:can_close_session(PlayerId, Token), Req, State}
-  catch
-    _:Exception ->
-      lsl_web_utils:handle_exception(Exception, Req, State)
-  end.
+  PlayerId = lsl_players:id(Player),
+  {not lsl:can_close_session(PlayerId, Token), Req, State}.

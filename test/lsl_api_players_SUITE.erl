@@ -9,19 +9,6 @@
          ]}
        ]).
 
--ignore_xref([ all/0
-             , init_per_suite/1
-             , end_per_suite/1
-             , init_per_testcase/2
-             , end_per_testcase/2
-             ]).
--ignore_xref([ post_players_wrong/1
-             , post_players_conflict/1
-             , post_players_ok/1
-             , get_players_wrong/1
-             , get_players_ok/1
-             ]).
-
 -export([ all/0
         , init_per_testcase/2
         , end_per_testcase/2
@@ -198,7 +185,7 @@ get_players_ok(Config) ->
   [] = [Pwd || #{<<"password">> := Pwd} <- Players1],
 
   ct:comment("When a player is added, GET /players should return it"),
-  _ = lsl:register_player(<<"get_players_ok-2">>, <<"pwd">>),
+  _ = lsl_test_utils:register_player(<<"get_players_ok-2">>, <<"pwd">>),
   #{status_code := 200,
            body := Body2} =
     lsl_test_utils:api_call(get, "/players", Headers),

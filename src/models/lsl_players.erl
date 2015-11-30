@@ -59,13 +59,7 @@ from_json(Json) ->
 
 -spec update(player(), sumo_rest_doc:json()) ->
   {ok, player()} | {error, sumo_rest_doc:reason()}.
-update(Player, Json) ->
-  case from_json(Json) of
-    {error, Reason} -> {error, Reason};
-    {ok, Updates} ->
-      UpdatedPlayer = maps:merge(Player, Updates),
-      {ok, UpdatedPlayer#{updated_at => ktn_date:now_human_readable()}}
-  end.
+update(Player, _Json) -> {ok, Player}.
 
 -spec uri_path(player()) -> iodata().
 uri_path(Player) -> id(Player).
@@ -78,7 +72,8 @@ id(#{id := Id}) -> Id.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% @doc creates a player
 -spec new(binary(), binary()) -> player().
-new(Name, PasswordHash) ->
+new(Name, Password) ->
+  PasswordHash = lsl_crypto:hash(Password),
   Now = ktn_date:now_human_readable(),
   #{ id             => Name
    , name           => Name

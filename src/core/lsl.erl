@@ -11,23 +11,19 @@
         , stop/1
         ]).
 
--export([ register_player/2
-        , fetch_player/2
+-export([ fetch_player/2
         , fetch_player/1
         , close_session/1
         , can_close_session/2
         , fetch_session_player/2
-        , fetch_players/0
         , fetch_ai_players/0
         , start_match/3
         , fetch_ai/1
         , find_matches/2
-        , fetch_match/1
         , is_match/1
         , play/5
         , is_playing/2
         , is_current_player/2
-        , stop_match/1
         ]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -91,10 +87,6 @@ stop([]) -> ok.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Core functions
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% @doc Creates a new player
--spec register_player(binary(), binary()) -> lsl_players:player().
-register_player(Name, Password) -> lsl_players_repo:register(Name, Password).
-
 %% @doc Retrieves a player given its name and password
 -spec fetch_player(binary(), binary()) -> lsl_players:player() | notfound.
 fetch_player(Name, Password) -> lsl_players_repo:fetch(Name, Password).
@@ -121,10 +113,6 @@ fetch_session_player(Token, Secret) ->
     Session -> lsl_players_repo:fetch(lsl_sessions:player_id(Session))
   end.
 
-%% @doc Retrieves all players
--spec fetch_players() -> [lsl_players:player(), ...].
-fetch_players() -> lsl_players_repo:all().
-
 %% @doc Retrieves all AI players
 -spec fetch_ai_players() -> [module(), ...].
 fetch_ai_players() -> lsl_ai:all().
@@ -133,10 +121,6 @@ fetch_ai_players() -> lsl_ai:all().
 -spec find_matches(lsl_players:player(), all | lsl_matches:status()) ->
   [lsl_matches:match()].
 find_matches(Player, Status) -> lsl_matches_repo:find(Player, Status).
-
-%% @doc Retrieves a match
--spec fetch_match(binary()) -> notfound | lsl_matches:match().
-fetch_match(MatchId) -> lsl_matches_repo:fetch(MatchId).
 
 %% @doc Starts a new match
 -spec start_match(binary(), module()|binary(), pos_integer()) ->
@@ -167,7 +151,3 @@ is_playing(MatchId, PlayerId) -> lsl_matches_repo:is_playing(MatchId, PlayerId).
 -spec is_current_player(binary(), binary()) -> boolean().
 is_current_player(MatchId, PlayerId) ->
   lsl_matches_repo:is_current_player(MatchId, PlayerId).
-
-%% @doc Deletes a match
--spec stop_match(binary()) -> boolean().
-stop_match(MatchId) -> lsl_matches_repo:stop(MatchId).

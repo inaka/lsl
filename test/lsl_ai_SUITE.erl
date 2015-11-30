@@ -1,9 +1,5 @@
 -module(lsl_ai_SUITE).
 -author('elbrujohalcon@inaka.net').
--ignore_xref([ all/0
-             , dumb_ai/1, dumb_ai_full_match/1
-             , rodolfo_start/1, rodolfo_finish/1, rodolfo_full_match/1
-             ]).
 
 -export([ all/0
         , dumb_ai/1, dumb_ai_full_match/1

@@ -1,18 +1,6 @@
 -module(lsl_core_SUITE).
 -author('elbrujohalcon@inaka.net').
 
--ignore_xref([all/0]).
--ignore_xref([ invalid_board/1
-             , valid_board/1
-             , play_out_of_bounds/1
-             , play_in_bounds/1
-             , cant_cross_crossed/1
-             , with_just_one_left_won/1
-             , with_no_sticks_left_lost/1
-             , no_undo/1
-             , undo/1
-             , pretty_print/1
-             ]).
 -export([all/0]).
 -export([ invalid_board/1
         , valid_board/1

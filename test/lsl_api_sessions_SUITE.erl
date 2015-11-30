@@ -9,18 +9,6 @@
          ]}
        ]).
 
--ignore_xref([ all/0
-             , init_per_suite/1
-             , end_per_suite/1
-             , init_per_testcase/2
-             , end_per_testcase/2
-             ]).
--ignore_xref([ post_sessions_wrong/1
-             , post_sessions_ok/1
-             , delete_sessions_wrong/1
-             , delete_sessions_ok/1
-             ]).
-
 -export([ all/0
         , init_per_testcase/2
         , end_per_testcase/2
