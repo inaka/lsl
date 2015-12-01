@@ -80,11 +80,13 @@ forbidden(Req, State) ->
   {Forbidden, Req1} =
     case cowboy_req:method(Req) of
       {<<"PATCH">>, NewReq} ->
-        { lsl:is_match(MatchId) and not lsl:is_current_player(MatchId, PlayerId)
+        { lsl_matches_repo:is_match(MatchId) and %% to produce 404 later
+          not lsl_matches_repo:is_current_player(MatchId, PlayerId)
         , NewReq
         };
       {_GetOrDelete, NewReq} ->
-        { lsl:is_match(MatchId) and not lsl:is_playing(MatchId, PlayerId)
+        { lsl_matches_repo:is_match(MatchId) and %% to produce 404 later
+          not lsl_matches_repo:is_playing(MatchId, PlayerId)
         , NewReq
         }
     end,
@@ -98,7 +100,7 @@ handle_patch(Req, State) ->
     PlayerId = lsl_players:id(Player),
     {ok, Body, Req1} = cowboy_req:body(Req),
     {Row, Col, Length} = parse_body(Body),
-    Match = lsl:play(MatchId, PlayerId, Row, Col, Length),
+    Match = lsl_matches_repo:play(MatchId, PlayerId, Row, Col, Length),
     RespBody = sr_json:encode(lsl_matches:to_json(Match, PlayerId)),
     Req2 = cowboy_req:set_resp_body(RespBody, Req1),
     {true, Req2, State}

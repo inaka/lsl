@@ -1,4 +1,4 @@
-%%% @doc /players/[:player_id] handler
+%%% @doc /players handler
 -module(lsl_players_handler).
 -author('elbrujohalcon@inaka.net').
 

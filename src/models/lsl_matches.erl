@@ -72,7 +72,7 @@ sumo_wakeup(Doc) ->
    } = Doc,
   Doc#{ rival_kind := binary_to_atom(RivalKind, utf8)
       , rival := case RivalKind of
-                   <<"ai">> -> lsl:fetch_ai(Rival);
+                   <<"ai">> -> lsl_ai:fetch(Rival);
                    <<"player">> -> Rival
                  end
       , core := binary_to_term(Core)
@@ -88,7 +88,7 @@ from_json(_Json) -> throw(no_simple_parsing).
 update(_Match, _Changes) -> throw(no_simple_parsing).
 
 -spec uri_path(match()) -> iodata().
-uri_path(Match) -> id(Match).
+uri_path(#{id := Id}) -> <<$/, Id/binary>>.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PUBLIC API
@@ -123,8 +123,10 @@ to_json(Match, CallerId) ->
    , rival =>
       case {CallerId, RivalKind} of
         {PlayerId, ai} -> lsl_ai:to_json(Rival);
-        {PlayerId, player} -> lsl_players:to_json(lsl:fetch_player(Rival));
-        {Rival, player} -> lsl_players:to_json(lsl:fetch_player(PlayerId))
+        {PlayerId, player} ->
+          lsl_players:to_json(lsl_players_repo:fetch(Rival));
+        {Rival, player} ->
+          lsl_players:to_json(lsl_players_repo:fetch(PlayerId))
       end
    , board => lsl_core:to_json(Core)
    , 'current-player' => CurrentPlayer

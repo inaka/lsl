@@ -62,7 +62,7 @@ from_json(Json) ->
 update(Player, _Json) -> {ok, Player}.
 
 -spec uri_path(player()) -> iodata().
-uri_path(Player) -> id(Player).
+uri_path(#{id := Id}) -> <<$/, Id/binary>>.
 
 -spec id(player()) -> binary().
 id(#{id := Id}) -> Id.

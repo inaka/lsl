@@ -47,11 +47,11 @@ end_per_testcase(_TestCase, Config) ->
   {value, {player2, Player2}, Config2} = lists:keytake(player2, 1, Config1),
   sumo:delete(lsl_players, lsl_players:id(Player2)),
   {value, {sessiona, SessionA}, Config3} = lists:keytake(sessiona, 1, Config2),
-  lsl:close_session(lsl_sessions:token(SessionA)),
+  sumo:delete(lsl_sessions, lsl_sessions:token(SessionA)),
   {value, {sessionb, SessionB}, Config4} = lists:keytake(sessionb, 1, Config3),
-  lsl:close_session(lsl_sessions:token(SessionB)),
+  sumo:delete(lsl_sessions, lsl_sessions:token(SessionB)),
   {value, {session2, Session2}, Config5} = lists:keytake(session2, 1, Config4),
-  lsl:close_session(lsl_sessions:token(Session2)),
+  sumo:delete(lsl_sessions, lsl_sessions:token(Session2)),
   Config5.
 
 -spec post_sessions_wrong(lsl_test_utils:config()) -> {comment, []}.
