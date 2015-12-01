@@ -173,13 +173,10 @@ post_matches_ok(Config) ->
   Secret = binary_to_list(lsl_sessions:secret(SessionA)),
   {player2, Player2} = lists:keyfind(player2, 1, Config),
   Rival = lsl_players:id(Player2),
-  RivalName = lsl_players:name(Player2),
   Headers =
     #{ basic_auth => {Token, Secret}
      , <<"content-type">> => <<"application/json">>
      },
-  DumbAIName = lsl_ai_dumb:name(),
-  Rodolfo = lsl_ai_rodolfo:name(),
 
   ct:comment("Start a match against another player, default # of rows"),
   ReqBody1 = sr_json:encode(#{rival => Rival}),
@@ -187,7 +184,7 @@ post_matches_ok(Config) ->
            body := Body1} =
     lsl_test_utils:api_call(post, "/matches", Headers, ReqBody1),
   #{ <<"id">> := Id1
-   , <<"rival">> := #{<<"id">> := Rival, <<"name">> := RivalName}
+   , <<"rival">> := Rival
    , <<"board">> := [ [false]
                     , [false, false]
                     , [false, false, false]
@@ -202,7 +199,7 @@ post_matches_ok(Config) ->
            body := Body2} =
     lsl_test_utils:api_call(post, "/matches", Headers, ReqBody2),
   #{ <<"id">> := Id2
-   , <<"rival">> := #{<<"id">> := Rival, <<"name">> := RivalName}
+   , <<"rival">> := Rival
    , <<"board">> := [ [false]
                     , [false, false]
                     ]
@@ -220,7 +217,7 @@ post_matches_ok(Config) ->
            body := Body3} =
     lsl_test_utils:api_call(post, "/matches", Headers, ReqBody3),
   #{ <<"id">> := Id3
-   , <<"rival">> := #{<<"id">> := <<"lsl_ai_dumb">>, <<"name">> := DumbAIName}
+   , <<"rival">> := <<"lsl_ai_dumb">>
    , <<"board">> := [ [true]
                     , [false, false]
                     , [false, false, false]
@@ -235,7 +232,7 @@ post_matches_ok(Config) ->
            body := Body4} =
     lsl_test_utils:api_call(post, "/matches", Headers, ReqBody4),
   #{ <<"id">> := Id4
-   , <<"rival">> := #{<<"id">> := <<"lsl_ai_rodolfo">>, <<"name">> := Rodolfo}
+   , <<"rival">> := <<"lsl_ai_rodolfo">>
    , <<"board">> := [ [true]
                     , [false, false]
                     , [false, false, false]
@@ -316,8 +313,6 @@ get_matches_ok(Config) ->
   Headers = #{basic_auth => {Token, Secret}},
   {player2, Player2} = lists:keyfind(player2, 1, Config),
   Rival = lsl_players:id(Player2),
-  RivalName = lsl_players:name(Player2),
-  DumbAIName = lsl_ai_dumb:name(),
 
   ct:comment("GET /matches returns an empty list"),
   #{status_code := 200,
@@ -341,7 +336,7 @@ get_matches_ok(Config) ->
            body := Body1} =
     lsl_test_utils:api_call(get, "/matches", Headers),
   [ #{ <<"id">> := M1Id
-     , <<"rival">> := #{<<"id">> := <<"lsl_ai_dumb">>, <<"name">> := DumbAIName}
+     , <<"rival">> := <<"lsl_ai_dumb">>
      , <<"board">> := [ [true]
                       , [false, false]
                       , [false, false, false]
@@ -359,7 +354,7 @@ get_matches_ok(Config) ->
            body := Body2} =
     lsl_test_utils:api_call(get, "/matches", Headers),
   [ #{ <<"id">> := M2Id
-     , <<"rival">> := #{<<"id">> := Rival, <<"name">> := RivalName}
+     , <<"rival">> := Rival
      , <<"board">> := [ [false]
                       , [false, false]
                       , [false, false, false]
@@ -505,8 +500,6 @@ get_match_ok(Config) ->
   Headers = #{basic_auth => {Token, Secret}},
   {player2, Player2} = lists:keyfind(player2, 1, Config),
   Rival = lsl_players:id(Player2),
-  RivalName = lsl_players:name(Player2),
-  DumbAIName = lsl_ai_dumb:name(),
 
   ct:comment("Matches are created"),
   P1MId = lsl_matches:id(lsl_test_utils:start_match(PlayerId, lsl_ai_dumb, 3)),
@@ -517,7 +510,7 @@ get_match_ok(Config) ->
            body := Body1} =
     lsl_test_utils:api_call(get, "/matches/" ++ binary_to_list(P1MId), Headers),
   #{ <<"id">> := P1MId
-   , <<"rival">> := #{<<"id">> := <<"lsl_ai_dumb">>, <<"name">> := DumbAIName}
+   , <<"rival">> := <<"lsl_ai_dumb">>
    , <<"board">> := [ [true]
                     , [false, false]
                     , [false, false, false]
@@ -531,7 +524,7 @@ get_match_ok(Config) ->
     lsl_test_utils:api_call(
       get, "/matches/" ++ binary_to_list(RivMId), Headers),
   #{ <<"id">> := RivMId
-   , <<"rival">> := #{<<"id">> := Rival, <<"name">> := RivalName}
+   , <<"rival">> := Rival
    , <<"board">> := [ [false]
                     , [false, false]
                     , [false, false, false]
@@ -678,12 +671,10 @@ patch_match_ok(Config) ->
   Secret = binary_to_list(lsl_sessions:secret(SessionA)),
   {player2, Player2} = lists:keyfind(player2, 1, Config),
   Rival = lsl_players:id(Player2),
-  RivalName = lsl_players:name(Player2),
   Headers =
     #{ basic_auth => {Token, Secret}
      , <<"content-type">> => <<"application/json">>
      },
-  DumbAIName = lsl_ai_dumb:name(),
 
   MatchId = lsl_matches:id(lsl_test_utils:start_match(Rival, PlayerId, 3)),
   MatchUrl = "/matches/" ++ binary_to_list(MatchId),
@@ -698,7 +689,7 @@ patch_match_ok(Config) ->
            body := Body1} =
     lsl_test_utils:api_call(patch, MatchUrl, Headers, ReqBody1),
   #{ <<"id">> := MatchId
-   , <<"rival">> := #{<<"id">> := Rival, <<"name">> := RivalName}
+   , <<"rival">> := Rival
    , <<"board">> := [ [false]
                     , [false, false]
                     , [false, true, true]
@@ -713,7 +704,7 @@ patch_match_ok(Config) ->
            body := Body2} =
     lsl_test_utils:api_call(patch, AIMatchUrl, Headers, ReqBody2),
   #{ <<"id">> := AIMatchId
-   , <<"rival">> := #{<<"id">> := <<"lsl_ai_dumb">>, <<"name">> := DumbAIName}
+   , <<"rival">> := <<"lsl_ai_dumb">>
    , <<"board">> := [ [true]
                     , [true, true]
                     , [true, false, false]

@@ -122,11 +122,9 @@ to_json(Match, CallerId) ->
   #{ id => Id
    , rival =>
       case {CallerId, RivalKind} of
-        {PlayerId, ai} -> lsl_ai:to_json(Rival);
-        {PlayerId, player} ->
-          lsl_players:to_json(lsl_players_repo:fetch(Rival));
-        {Rival, player} ->
-          lsl_players:to_json(lsl_players_repo:fetch(PlayerId))
+        {PlayerId,  ai} -> Rival;
+        {PlayerId,  player} -> Rival;
+        {Rival,     player} -> PlayerId
       end
    , board => lsl_core:to_json(Core)
    , 'current-player' => CurrentPlayer
