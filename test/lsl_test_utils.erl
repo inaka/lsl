@@ -15,6 +15,7 @@
 -export([ register_player/1
         , register_player/2
         , open_session/1
+        , start_match/3
         ]).
 -export([full_match/2]).
 
@@ -72,3 +73,8 @@ register_player(Name, Password) ->
 -spec open_session(lsl_players:player()) -> lsl_sessions:session().
 open_session(Player) ->
   sumo:persist(lsl_sessions, lsl_sessions:new(lsl_players:id(Player))).
+
+-spec start_match(binary(), module()|binary(), pos_integer()) ->
+  lsl_matches:match().
+start_match(PlayerId, Rival, Rows) ->
+  lsl_matches_repo:start(PlayerId, Rival, Rows).

@@ -3,12 +3,26 @@
 -author('elbrujohalcon@inaka.net').
 
 -export([ can_close/2
-        , close/1
-        , fetch/2
+        , fetch_player/2
         ]).
 
-%% @doc Retrieves a session by its token and secret
--spec fetch(binary(), binary()) -> lsl_sessions:session() | notfound.
+%% @doc Is the player allowed to close the session?
+-spec can_close(binary(), binary()) -> boolean().
+can_close(PlayerId, Token) ->
+  case sumo:find(lsl_sessions, Token) of
+    notfound -> true;
+    Session -> PlayerId =:= lsl_sessions:player_id(Session)
+  end.
+
+%% @doc Retrieves a player given the token and secret for the session
+-spec fetch_player(binary(), binary()) ->
+  lsl_players:player() | notfound.
+fetch_player(Token, Secret) ->
+  case fetch(Token, Secret) of
+    notfound -> notfound;
+    Session -> lsl_players_repo:fetch(lsl_sessions:player_id(Session))
+  end.
+
 fetch(Token, Secret) ->
   case sumo:find(lsl_sessions, Token) of
     notfound -> notfound;
@@ -17,17 +31,4 @@ fetch(Token, Secret) ->
         Secret -> Session;
         _ -> notfound
       end
-  end.
-
-%% @doc Removes a session
--spec close(binary()) -> boolean().
-close(Token) ->
-  sumo:delete(lsl_sessions, Token).
-
-%% @doc Is the player allowed to close the session?
--spec can_close(binary(), binary()) -> boolean().
-can_close(PlayerId, Token) ->
-  case sumo:find(lsl_sessions, Token) of
-    notfound -> true;
-    Session -> PlayerId =:= lsl_sessions:player_id(Session)
   end.

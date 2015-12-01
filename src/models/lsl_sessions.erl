@@ -50,7 +50,7 @@ from_json(_Json) -> throw(no_simple_parsing).
 update(_Session, _Changes) -> throw(no_simple_parsing).
 
 -spec uri_path(session()) -> iodata().
-uri_path(Session) -> token(Session).
+uri_path(#{token := Token}) -> <<$/, Token/binary>>.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PUBLIC API

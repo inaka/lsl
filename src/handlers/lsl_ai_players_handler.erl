@@ -45,5 +45,5 @@ is_authorized(Req, State) ->
 handle_get(Req, State) ->
   RespBody =
     sr_json:encode(
-      [lsl_ai:to_json(Player) || Player <- lsl:fetch_ai_players()]),
+      [lsl_ai:to_json(Player) || Player <- lsl_ai:all()]),
   {RespBody, Req, State}.

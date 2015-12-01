@@ -26,14 +26,15 @@ is_authorized([player|Rest], DefaultMech, Req, State) ->
     {undefined, Req1} -> is_authorized(Rest, DefaultMech, Req1, State);
     {{Name, Password}, Req1} ->
       is_authorized(
-        lsl:fetch_player(Name, Password), Rest, DefaultMech, Req1, State)
+        lsl_players_repo:fetch(Name, Password), Rest, DefaultMech, Req1, State)
   end;
 is_authorized([session|Rest], DefaultMech, Req, State) ->
   case credentials(Req) of
     {undefined, Req1} -> is_authorized(Rest, DefaultMech, Req1, State);
     {{Token, Secret}, Req1} ->
       is_authorized(
-        lsl:fetch_session_player(Token, Secret), Rest, DefaultMech, Req1, State)
+        lsl_sessions_repo:fetch_player(Token, Secret),
+        Rest, DefaultMech, Req1, State)
   end.
 
 is_authorized(notfound, Rest, DefaultMech, Req, State) ->

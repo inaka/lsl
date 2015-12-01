@@ -56,4 +56,4 @@ is_authorized(Req, State) ->
 forbidden(Req, State) ->
   #{player := Player, id := Token} = State,
   PlayerId = lsl_players:id(Player),
-  {not lsl:can_close_session(PlayerId, Token), Req, State}.
+  {not lsl_sessions_repo:can_close(PlayerId, Token), Req, State}.

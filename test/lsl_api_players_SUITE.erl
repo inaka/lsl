@@ -39,7 +39,7 @@ end_per_testcase(_TestCase, Config) ->
   {value, {player, Player}, Config1} = lists:keytake(player, 1, Config),
   sumo:delete(lsl_players, lsl_players:id(Player)),
   {value, {session, Session}, Config2} = lists:keytake(session, 1, Config1),
-  lsl:close_session(lsl_sessions:token(Session)),
+  sumo:delete(lsl_sessions, lsl_sessions:token(Session)),
   Config2.
 
 -spec post_players_wrong(lsl_test_utils:config()) -> {comment, []}.

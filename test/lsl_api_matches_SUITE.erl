@@ -53,9 +53,9 @@ end_per_testcase(_TestCase, Config) ->
   {value, {player2, Player2}, Config2} = lists:keytake(player2, 1, Config1),
   sumo:delete(lsl_players, lsl_players:id(Player2)),
   {value, {session1, Session1}, Config3} = lists:keytake(session1, 1, Config2),
-  lsl:close_session(lsl_sessions:token(Session1)),
+  sumo:delete(lsl_sessions, lsl_sessions:token(Session1)),
   {value, {session2, Session2}, Config4} = lists:keytake(session2, 1, Config3),
-  lsl:close_session(lsl_sessions:token(Session2)),
+  sumo:delete(lsl_sessions, lsl_sessions:token(Session2)),
   application:unset_env(lsl, default_rows),
   Config4.
 
@@ -173,13 +173,10 @@ post_matches_ok(Config) ->
   Secret = binary_to_list(lsl_sessions:secret(SessionA)),
   {player2, Player2} = lists:keyfind(player2, 1, Config),
   Rival = lsl_players:id(Player2),
-  RivalName = lsl_players:name(Player2),
   Headers =
     #{ basic_auth => {Token, Secret}
      , <<"content-type">> => <<"application/json">>
      },
-  DumbAIName = lsl_ai_dumb:name(),
-  Rodolfo = lsl_ai_rodolfo:name(),
 
   ct:comment("Start a match against another player, default # of rows"),
   ReqBody1 = sr_json:encode(#{rival => Rival}),
@@ -187,7 +184,7 @@ post_matches_ok(Config) ->
            body := Body1} =
     lsl_test_utils:api_call(post, "/matches", Headers, ReqBody1),
   #{ <<"id">> := Id1
-   , <<"rival">> := #{<<"id">> := Rival, <<"name">> := RivalName}
+   , <<"rival">> := Rival
    , <<"board">> := [ [false]
                     , [false, false]
                     , [false, false, false]
@@ -202,7 +199,7 @@ post_matches_ok(Config) ->
            body := Body2} =
     lsl_test_utils:api_call(post, "/matches", Headers, ReqBody2),
   #{ <<"id">> := Id2
-   , <<"rival">> := #{<<"id">> := Rival, <<"name">> := RivalName}
+   , <<"rival">> := Rival
    , <<"board">> := [ [false]
                     , [false, false]
                     ]
@@ -220,7 +217,7 @@ post_matches_ok(Config) ->
            body := Body3} =
     lsl_test_utils:api_call(post, "/matches", Headers, ReqBody3),
   #{ <<"id">> := Id3
-   , <<"rival">> := #{<<"id">> := <<"lsl_ai_dumb">>, <<"name">> := DumbAIName}
+   , <<"rival">> := <<"lsl_ai_dumb">>
    , <<"board">> := [ [true]
                     , [false, false]
                     , [false, false, false]
@@ -235,7 +232,7 @@ post_matches_ok(Config) ->
            body := Body4} =
     lsl_test_utils:api_call(post, "/matches", Headers, ReqBody4),
   #{ <<"id">> := Id4
-   , <<"rival">> := #{<<"id">> := <<"lsl_ai_rodolfo">>, <<"name">> := Rodolfo}
+   , <<"rival">> := <<"lsl_ai_rodolfo">>
    , <<"board">> := [ [true]
                     , [false, false]
                     , [false, false, false]
@@ -316,8 +313,6 @@ get_matches_ok(Config) ->
   Headers = #{basic_auth => {Token, Secret}},
   {player2, Player2} = lists:keyfind(player2, 1, Config),
   Rival = lsl_players:id(Player2),
-  RivalName = lsl_players:name(Player2),
-  DumbAIName = lsl_ai_dumb:name(),
 
   ct:comment("GET /matches returns an empty list"),
   #{status_code := 200,
@@ -326,7 +321,7 @@ get_matches_ok(Config) ->
   [] = sr_json:decode(EmptyBody),
 
   ct:comment("A match that doesn't include player1 is created"),
-  _ = lsl:start_match(Rival, lsl_ai_dumb, 5),
+  _ = lsl_test_utils:start_match(Rival, lsl_ai_dumb, 5),
 
   ct:comment("GET /matches still returns an empty list"),
   #{status_code := 200,
@@ -334,14 +329,14 @@ get_matches_ok(Config) ->
     lsl_test_utils:api_call(get, "/matches", Headers),
 
   ct:comment("A match with player1 as player 1 is created"),
-  M1Id = lsl_matches:id(lsl:start_match(PlayerId, lsl_ai_dumb, 3)),
+  M1Id = lsl_matches:id(lsl_test_utils:start_match(PlayerId, lsl_ai_dumb, 3)),
 
   ct:comment("GET /matches returns that match"),
   #{status_code := 200,
            body := Body1} =
     lsl_test_utils:api_call(get, "/matches", Headers),
   [ #{ <<"id">> := M1Id
-     , <<"rival">> := #{<<"id">> := <<"lsl_ai_dumb">>, <<"name">> := DumbAIName}
+     , <<"rival">> := <<"lsl_ai_dumb">>
      , <<"board">> := [ [true]
                       , [false, false]
                       , [false, false, false]
@@ -352,14 +347,14 @@ get_matches_ok(Config) ->
   ] = sr_json:decode(Body1),
 
   ct:comment("A match with player1 as rival is created"),
-  M2Id = lsl_matches:id(lsl:start_match(Rival, PlayerId, 3)),
+  M2Id = lsl_matches:id(lsl_test_utils:start_match(Rival, PlayerId, 3)),
 
   ct:comment("GET /matches returns both matches"),
   #{status_code := 200,
            body := Body2} =
     lsl_test_utils:api_call(get, "/matches", Headers),
   [ #{ <<"id">> := M2Id
-     , <<"rival">> := #{<<"id">> := Rival, <<"name">> := RivalName}
+     , <<"rival">> := Rival
      , <<"board">> := [ [false]
                       , [false, false]
                       , [false, false, false]
@@ -387,17 +382,17 @@ get_matches_status_ok(Config) ->
   RivHeaders = #{basic_auth => {RivToken, RivSecret}},
 
   ct:comment("Three matches are created"),
-  PlayingId = lsl_matches:id(lsl:start_match(PlayerId, Rival, 3)),
-  WonId = lsl_matches:id(lsl:start_match(PlayerId, Rival, 3)),
-  LostId = lsl_matches:id(lsl:start_match(PlayerId, Rival, 3)),
+  PlayingId = lsl_matches:id(lsl_test_utils:start_match(PlayerId, Rival, 3)),
+  WonId = lsl_matches:id(lsl_test_utils:start_match(PlayerId, Rival, 3)),
+  LostId = lsl_matches:id(lsl_test_utils:start_match(PlayerId, Rival, 3)),
   AllIds = lists:sort([PlayingId, WonId, LostId]),
 
   ct:comment("Player1 wins one, looses 1"),
-  _ = lsl:play(WonId, Rival, 3, 1, 3),
-  _ = lsl:play(WonId, PlayerId, 2, 1, 2),
-  _ = lsl:play(LostId, Rival, 3, 1, 3),
-  _ = lsl:play(LostId, PlayerId, 1, 1, 1),
-  _ = lsl:play(LostId, Rival, 2, 1, 1),
+  _ = lsl_matches_repo:play(WonId, Rival, 3, 1, 3),
+  _ = lsl_matches_repo:play(WonId, PlayerId, 2, 1, 2),
+  _ = lsl_matches_repo:play(LostId, Rival, 3, 1, 3),
+  _ = lsl_matches_repo:play(LostId, PlayerId, 1, 1, 1),
+  _ = lsl_matches_repo:play(LostId, Rival, 2, 1, 1),
 
   MatchIds =
     fun(Status, Hs) ->
@@ -420,8 +415,8 @@ get_matches_status_ok(Config) ->
   [WonId] = MatchIds("lost", RivHeaders),
 
   ct:comment("everything still works *after* the games are absolutely over"),
-  _ = lsl:play(WonId, Rival, 1, 1, 1),
-  _ = lsl:play(LostId, PlayerId, 2, 2, 1),
+  _ = lsl_matches_repo:play(WonId, Rival, 1, 1, 1),
+  _ = lsl_matches_repo:play(LostId, PlayerId, 2, 2, 1),
   [WonId] = MatchIds("won", Headers),
   [LostId] = MatchIds("won", RivHeaders),
   [LostId] = MatchIds("lost", Headers),
@@ -487,7 +482,8 @@ get_match_wrong(Config) ->
     lsl_test_utils:api_call(get, "/matches/wrong-id", Headers),
 
   ForbiddenId =
-    binary_to_list(lsl_matches:id(lsl:start_match(Rival, lsl_ai_dumb, 5))),
+    binary_to_list(
+      lsl_matches:id(lsl_test_utils:start_match(Rival, lsl_ai_dumb, 5))),
 
   #{status_code := 403} =
     lsl_test_utils:api_call(get, "/matches/" ++ ForbiddenId, Headers),
@@ -504,19 +500,17 @@ get_match_ok(Config) ->
   Headers = #{basic_auth => {Token, Secret}},
   {player2, Player2} = lists:keyfind(player2, 1, Config),
   Rival = lsl_players:id(Player2),
-  RivalName = lsl_players:name(Player2),
-  DumbAIName = lsl_ai_dumb:name(),
 
   ct:comment("Matches are created"),
-  P1MId = lsl_matches:id(lsl:start_match(PlayerId, lsl_ai_dumb, 3)),
-  RivMId = lsl_matches:id(lsl:start_match(Rival, PlayerId, 3)),
+  P1MId = lsl_matches:id(lsl_test_utils:start_match(PlayerId, lsl_ai_dumb, 3)),
+  RivMId = lsl_matches:id(lsl_test_utils:start_match(Rival, PlayerId, 3)),
 
   ct:comment("GET /matches/:mid returns all matches"),
   #{status_code := 200,
            body := Body1} =
     lsl_test_utils:api_call(get, "/matches/" ++ binary_to_list(P1MId), Headers),
   #{ <<"id">> := P1MId
-   , <<"rival">> := #{<<"id">> := <<"lsl_ai_dumb">>, <<"name">> := DumbAIName}
+   , <<"rival">> := <<"lsl_ai_dumb">>
    , <<"board">> := [ [true]
                     , [false, false]
                     , [false, false, false]
@@ -530,7 +524,7 @@ get_match_ok(Config) ->
     lsl_test_utils:api_call(
       get, "/matches/" ++ binary_to_list(RivMId), Headers),
   #{ <<"id">> := RivMId
-   , <<"rival">> := #{<<"id">> := Rival, <<"name">> := RivalName}
+   , <<"rival">> := Rival
    , <<"board">> := [ [false]
                     , [false, false]
                     , [false, false, false]
@@ -592,7 +586,8 @@ patch_match_wrong(Config) ->
 
   ct:comment("PATCH without content-type fails"),
   MatchId =
-    binary_to_list(lsl_matches:id(lsl:start_match(Rival, PlayerId, 3))),
+    binary_to_list(
+      lsl_matches:id(lsl_test_utils:start_match(Rival, PlayerId, 3))),
   MatchUrl = "/matches/" ++ MatchId,
 
   Headers4 = #{basic_auth => {Token, Secret}},
@@ -651,14 +646,16 @@ patch_match_wrong(Config) ->
 
   ct:comment("PATCH with not your match fails"),
   ForbiddenId =
-    binary_to_list(lsl_matches:id(lsl:start_match(Rival, lsl_ai_dumb, 5))),
+    binary_to_list(
+      lsl_matches:id(lsl_test_utils:start_match(Rival, lsl_ai_dumb, 5))),
 
   #{status_code := 403} =
     lsl_test_utils:api_call(patch, "/matches/" ++ ForbiddenId, Headers),
 
   ct:comment("PATCH when not your turn fails"),
   NotYourTurnId =
-    binary_to_list(lsl_matches:id(lsl:start_match(PlayerId, Rival, 3))),
+    binary_to_list(
+      lsl_matches:id(lsl_test_utils:start_match(PlayerId, Rival, 3))),
 
   #{status_code := 403} =
     lsl_test_utils:api_call(patch, "/matches/" ++ NotYourTurnId, Headers),
@@ -674,17 +671,16 @@ patch_match_ok(Config) ->
   Secret = binary_to_list(lsl_sessions:secret(SessionA)),
   {player2, Player2} = lists:keyfind(player2, 1, Config),
   Rival = lsl_players:id(Player2),
-  RivalName = lsl_players:name(Player2),
   Headers =
     #{ basic_auth => {Token, Secret}
      , <<"content-type">> => <<"application/json">>
      },
-  DumbAIName = lsl_ai_dumb:name(),
 
-  MatchId = lsl_matches:id(lsl:start_match(Rival, PlayerId, 3)),
+  MatchId = lsl_matches:id(lsl_test_utils:start_match(Rival, PlayerId, 3)),
   MatchUrl = "/matches/" ++ binary_to_list(MatchId),
 
-  AIMatchId = lsl_matches:id(lsl:start_match(PlayerId, lsl_ai_dumb, 3)),
+  AIMatchId =
+    lsl_matches:id(lsl_test_utils:start_match(PlayerId, lsl_ai_dumb, 3)),
   AIMatchUrl = "/matches/" ++ binary_to_list(AIMatchId),
 
   ct:comment("PATCHing a game actually crosses the sticks"),
@@ -693,7 +689,7 @@ patch_match_ok(Config) ->
            body := Body1} =
     lsl_test_utils:api_call(patch, MatchUrl, Headers, ReqBody1),
   #{ <<"id">> := MatchId
-   , <<"rival">> := #{<<"id">> := Rival, <<"name">> := RivalName}
+   , <<"rival">> := Rival
    , <<"board">> := [ [false]
                     , [false, false]
                     , [false, true, true]
@@ -708,7 +704,7 @@ patch_match_ok(Config) ->
            body := Body2} =
     lsl_test_utils:api_call(patch, AIMatchUrl, Headers, ReqBody2),
   #{ <<"id">> := AIMatchId
-   , <<"rival">> := #{<<"id">> := <<"lsl_ai_dumb">>, <<"name">> := DumbAIName}
+   , <<"rival">> := <<"lsl_ai_dumb">>
    , <<"board">> := [ [true]
                     , [true, true]
                     , [true, false, false]
@@ -774,7 +770,8 @@ delete_match_wrong(Config) ->
     lsl_test_utils:api_call(delete, "/matches/wrong-id", Headers),
 
   ForbiddenId =
-    binary_to_list(lsl_matches:id(lsl:start_match(Rival, lsl_ai_dumb, 5))),
+    binary_to_list(
+      lsl_matches:id(lsl_test_utils:start_match(Rival, lsl_ai_dumb, 5))),
 
   #{status_code := 403} =
     lsl_test_utils:api_call(delete, "/matches/" ++ ForbiddenId, Headers),
@@ -793,22 +790,22 @@ delete_match_ok(Config) ->
   Rival = lsl_players:id(Player2),
 
   ct:comment("Matches are created"),
-  P1MId = lsl_matches:id(lsl:start_match(PlayerId, lsl_ai_dumb, 3)),
+  P1MId = lsl_matches:id(lsl_test_utils:start_match(PlayerId, lsl_ai_dumb, 3)),
   P1Url = "/matches/" ++ binary_to_list(P1MId),
-  RivMId = lsl_matches:id(lsl:start_match(Rival, PlayerId, 3)),
+  RivMId = lsl_matches:id(lsl_test_utils:start_match(Rival, PlayerId, 3)),
   RivUrl = "/matches/" ++ binary_to_list(RivMId),
 
   ct:comment("DELETE /matches/:mid deletes the match"),
-  true = lsl:is_match(P1MId),
+  true = lsl_matches_repo:is_match(P1MId),
   #{status_code := 204} = lsl_test_utils:api_call(delete, P1Url, Headers),
-  ktn_task:wait_for(fun() -> lsl:is_match(P1MId) end, false),
+  ktn_task:wait_for(fun() -> lsl_matches_repo:is_match(P1MId) end, false),
 
   #{status_code := 404} = lsl_test_utils:api_call(delete, P1Url, Headers),
 
   ct:comment("and it works with other players as well"),
-  true = lsl:is_match(RivMId),
+  true = lsl_matches_repo:is_match(RivMId),
   #{status_code := 204} = lsl_test_utils:api_call(delete, RivUrl, Headers),
-  ktn_task:wait_for(fun() -> lsl:is_match(P1MId) end, false),
+  ktn_task:wait_for(fun() -> lsl_matches_repo:is_match(P1MId) end, false),
 
   #{status_code := 404} = lsl_test_utils:api_call(delete, RivUrl, Headers),
 

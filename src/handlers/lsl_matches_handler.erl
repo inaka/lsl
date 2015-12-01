@@ -68,14 +68,14 @@ handle_post(Req, State) ->
     Match =
       case parse_body(Body) of
         {player, Rival, Rows} ->
-          lsl:start_match(PlayerId, lsl_players:id(Rival), Rows);
+          lsl_matches_repo:start(PlayerId, lsl_players:id(Rival), Rows);
         {ai, AI, Rows} ->
-          lsl:start_match(PlayerId, AI, Rows)
+          lsl_matches_repo:start(PlayerId, AI, Rows)
       end,
-    MatchId = lsl_matches:uri_path(Match),
+    MatchUri = lsl_matches:uri_path(Match),
     RespBody = sr_json:encode(lsl_matches:to_json(Match, PlayerId)),
     Req2 = cowboy_req:set_resp_body(RespBody, Req1),
-    {{true, <<"/matches/", MatchId/binary>>}, Req2, State}
+    {{true, <<"/matches", MatchUri/binary>>}, Req2, State}
   catch
     _:Exception ->
       lsl_web_utils:handle_exception(Exception, Req, State)
@@ -92,7 +92,7 @@ handle_get(Req, State) ->
     RespBody =
       sr_json:encode(
         [ lsl_matches:to_json(Match, lsl_players:id(Player))
-        || Match <- lsl:find_matches(Player, Status)
+        || Match <- lsl_matches_repo:find(Player, Status)
         ]),
     {RespBody, Req1, State}
   catch
@@ -112,9 +112,9 @@ parse_body(Body) ->
     {RivalId, Rows} -> parse_body(RivalId, Rows)
   end.
 parse_body(RivalId, Rows) ->
-  case lsl:fetch_ai(RivalId) of
+  case lsl_ai:fetch(RivalId) of
     notfound ->
-      case lsl:fetch_player(RivalId) of
+      case lsl_players_repo:fetch(RivalId) of
         notfound -> throw({invalid_field, <<"rival">>});
         Rival -> {player, Rival, Rows}
       end;

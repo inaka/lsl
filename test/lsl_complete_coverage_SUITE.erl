@@ -26,13 +26,13 @@ web_utils(_Config) ->
 matches_repo(_Config) ->
   PlayerId = lsl_players:id(lsl_test_utils:register_player(<<"player">>)),
   RivalId = lsl_players:id(lsl_test_utils:register_player(<<"rival">>)),
-  MatchId = lsl_matches:id(lsl:start_match(PlayerId, RivalId, 3)),
-  try lsl:play(<<"wrong-match-id">>, PlayerId, 1, 1, 1) of
+  MatchId = lsl_matches:id(lsl_test_utils:start_match(PlayerId, RivalId, 3)),
+  try lsl_matches_repo:play(<<"wrong-match-id">>, PlayerId, 1, 1, 1) of
     X -> ct:fail("Unexpected result ~p", [X])
   catch
     _:notfound -> ok
   end,
-  try lsl:play(MatchId, PlayerId, 1, 1, 1) of
+  try lsl_matches_repo:play(MatchId, PlayerId, 1, 1, 1) of
     Y -> ct:fail("Unexpected result ~p", [Y])
   catch
     _:invalid_player -> ok
