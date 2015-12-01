@@ -9,9 +9,9 @@
 %% @doc Retrieves a player by it's name a password
 -spec fetch(binary(), binary()) -> lsl_players:player() | notfound.
 fetch(Name, Password) ->
-  case sumo:find_by(lsl_players, [{name, Name}]) of
-    [] -> notfound;
-    [Player|_] ->
+  case fetch(Name) of
+    notfound -> notfound;
+    Player ->
       PasswordHash = lsl_players:password_hash(Player),
       case lsl_crypto:match(Password, PasswordHash) of
         true -> Player;
