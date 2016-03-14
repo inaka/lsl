@@ -9,7 +9,8 @@
     sasl,
     lager,
     cowboy,
-    sumo_db,
+    sumo_rest,
+    mnesia,
     erlpass
   ]},
   {modules, []},
