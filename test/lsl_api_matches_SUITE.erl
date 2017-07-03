@@ -798,14 +798,14 @@ delete_match_ok(Config) ->
   ct:comment("DELETE /matches/:mid deletes the match"),
   true = lsl_matches_repo:is_match(P1MId),
   #{status_code := 204} = lsl_test_utils:api_call(delete, P1Url, Headers),
-  ktn_task:wait_for(fun() -> lsl_matches_repo:is_match(P1MId) end, false),
+  _ = ktn_task:wait_for(fun() -> lsl_matches_repo:is_match(P1MId) end, false),
 
   #{status_code := 404} = lsl_test_utils:api_call(delete, P1Url, Headers),
 
   ct:comment("and it works with other players as well"),
   true = lsl_matches_repo:is_match(RivMId),
   #{status_code := 204} = lsl_test_utils:api_call(delete, RivUrl, Headers),
-  ktn_task:wait_for(fun() -> lsl_matches_repo:is_match(P1MId) end, false),
+  _ = ktn_task:wait_for(fun() -> lsl_matches_repo:is_match(P1MId) end, false),
 
   #{status_code := 404} = lsl_test_utils:api_call(delete, RivUrl, Headers),
 

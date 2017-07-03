@@ -9,7 +9,7 @@
 %% @doc Is the player allowed to close the session?
 -spec can_close(binary(), binary()) -> boolean().
 can_close(PlayerId, Token) ->
-  case sumo:find(lsl_sessions, Token) of
+  case sumo:fetch(lsl_sessions, Token) of
     notfound -> true;
     Session -> PlayerId =:= lsl_sessions:player_id(Session)
   end.
@@ -24,7 +24,7 @@ fetch_player(Token, Secret) ->
   end.
 
 fetch(Token, Secret) ->
-  case sumo:find(lsl_sessions, Token) of
+  case sumo:fetch(lsl_sessions, Token) of
     notfound -> notfound;
     Session ->
       case lsl_sessions:secret(Session) of

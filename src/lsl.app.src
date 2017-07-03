@@ -8,13 +8,23 @@
     stdlib,
     sasl,
     lager,
+    crypto,
+    sumo_db,
+    mnesia,
     cowboy,
+    trails,
+    cowboy_swagger,
     sumo_rest,
     mnesia,
+    katana,
     erlpass
   ]},
   {modules, []},
   {mod, {lsl, []}},
   {env, []},
+  {maintainers, ["Inaka"]},
+  {licenses, ["Apache 2.0"]},
+  {links, [{"Github", "https://github.com/inaka/lsl"}]},
+  {build_tools, ["rebar3"]},
   {start_phases, [{create_schema, []}, {start_cowboy_listeners, []}]}
  ]}.

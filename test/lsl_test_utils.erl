@@ -2,6 +2,9 @@
 -module(lsl_test_utils).
 
 -type config() :: proplists:proplist().
+
+-type response() :: shotgun:response().
+
 -export_type([config/0]).
 
 -export([ all/1
@@ -37,15 +40,15 @@ end_per_suite(Config) ->
   _ = shotgun:stop(),
   Config.
 
--spec api_call(atom(), string()) -> #{}.
+-spec api_call(atom(), string()) -> response().
 api_call(Method, Uri) ->
   api_call(Method, Uri, #{}).
 
--spec api_call(atom(), string(), #{}) -> #{}.
+-spec api_call(atom(), string(), map()) -> response().
 api_call(Method, Uri, Headers) ->
   api_call(Method, Uri, Headers, []).
 
--spec api_call(atom(), string(), #{}, iodata()) -> #{}.
+-spec api_call(atom(), string(), map(), iodata()) -> response().
 api_call(Method, Uri, Headers, Body) ->
   Port = application:get_env(lsl, http_port, 8585),
   {ok, Pid} = shotgun:open("localhost", Port),

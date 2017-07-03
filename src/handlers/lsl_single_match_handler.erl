@@ -75,7 +75,8 @@ is_authorized(Req, State) ->
 -spec forbidden(cowboy_req:req(), state()) ->
   {boolean() | halt, cowboy_req:req(), state()}.
 forbidden(Req, State) ->
-  #{player := Player, id := MatchId} = State,
+  MatchId = sr_state:id(State),
+  Player = sr_state:retrieve(player, State, undefined),
   PlayerId = lsl_players:id(Player),
   {Forbidden, Req1} =
     case cowboy_req:method(Req) of
@@ -96,7 +97,8 @@ forbidden(Req, State) ->
     {halt | {boolean(), binary()}, cowboy_req:req(), state()}.
 handle_patch(Req, State) ->
   try
-    #{player := Player, id := MatchId} = State,
+    MatchId = sr_state:id(State),
+    Player = sr_state:retrieve(player, State, undefined),
     PlayerId = lsl_players:id(Player),
     {ok, Body, Req1} = cowboy_req:body(Req),
     {Row, Col, Length} = parse_body(Body),

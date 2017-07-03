@@ -40,7 +40,7 @@ filter(AllMatches, PlayerId, Status) ->
   binary(), binary(), lsl_core:row(), lsl_core:col(), lsl_core:length()) ->
   lsl_matches:match().
 play(MatchId, PlayerId, Row, Col, Length) ->
-  case sumo:find(lsl_matches, MatchId) of
+  case sumo:fetch(lsl_matches, MatchId) of
     notfound -> throw(notfound);
     Match ->
       case lsl_matches:current_player(Match) of
@@ -64,12 +64,12 @@ do_play(Match, _PlayerId, Row, Col, Length) ->
 
 %% @doc Is this a valid match id?
 -spec is_match(binary()) -> boolean().
-is_match(MatchId) -> notfound =/= sumo:find(lsl_matches, MatchId).
+is_match(MatchId) -> notfound =/= sumo:fetch(lsl_matches, MatchId).
 
 %% @doc Is the player playing that game
 -spec is_playing(binary(), binary()) -> boolean().
 is_playing(MatchId, PlayerId) ->
-  case sumo:find(lsl_matches, MatchId) of
+  case sumo:fetch(lsl_matches, MatchId) of
     notfound -> false;
     Match -> lists:member(PlayerId, lsl_matches:players(Match))
   end.
@@ -77,7 +77,7 @@ is_playing(MatchId, PlayerId) ->
 %% @doc Is the player the current player for that game
 -spec is_current_player(binary(), binary()) -> boolean().
 is_current_player(MatchId, PlayerId) ->
-  case sumo:find(lsl_matches, MatchId) of
+  case sumo:fetch(lsl_matches, MatchId) of
     notfound -> false;
     Match -> PlayerId == lsl_matches:current_player(Match)
   end.

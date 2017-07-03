@@ -6,7 +6,7 @@
 -behaviour(sumo_rest_doc).
 
 -opaque match() ::
-  #{ id => binary()
+  #{ id => binary() | undefined
    , player_id => binary()
    , rival_kind => player | ai
    , rival => atom() | binary()
@@ -30,6 +30,7 @@
         , players/1
         , rival_kind/1
         , rival/1
+        , location/2
         ]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -49,7 +50,7 @@ sumo_schema() ->
     ]).
 
 %% @private
--spec sumo_sleep(match()) -> sumo:doc().
+-spec sumo_sleep(match()) -> sumo:model().
 sumo_sleep(Match) ->
   #{ rival_kind := RivalKind
    , rival := Rival
@@ -64,7 +65,7 @@ sumo_sleep(Match) ->
         }.
 
 %% @private
--spec sumo_wakeup(sumo:doc()) -> match().
+-spec sumo_wakeup(sumo:model()) -> match().
 sumo_wakeup(Doc) ->
   #{ rival_kind := RivalKind
    , rival := Rival
@@ -78,7 +79,7 @@ sumo_wakeup(Doc) ->
       , core := binary_to_term(Core)
       }.
 
--spec to_json(match()) -> sumo_rest_doc:json().
+-spec to_json(match()) -> sr_json:json().
 to_json(Match) -> to_json(Match, current_player(Match)).
 
 -spec from_json(sumo_rest_doc:json()) -> no_return().
@@ -108,7 +109,7 @@ new(PlayerId, RivalKind, Rival, Core) ->
    }.
 
 %% @doc Represents a match as json
--spec to_json(match(), binary()) -> map().
+-spec to_json(match(), binary()) -> sr_json:json().
 to_json(Match, CallerId) ->
   #{ id         := Id
    , player_id  := PlayerId
@@ -181,3 +182,6 @@ rival_kind(#{rival_kind := RivalKind}) -> RivalKind.
 %% @doc is it a match against AI or another player?
 -spec rival(match()) -> atom() | binary().
 rival(#{rival := Rival}) -> Rival.
+
+-spec location(match(), sumo_rest_doc:path()) -> binary().
+location(#{id := Id}, Path) -> iolist_to_binary([Path, "/", Id]).

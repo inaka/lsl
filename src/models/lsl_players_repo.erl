@@ -22,4 +22,4 @@ fetch(Name, Password) ->
 %% @doc Retrieves a player by it's id
 -spec fetch(binary()) -> lsl_players:player() | notfound.
 fetch(PlayerId) ->
-  sumo:find(lsl_players, PlayerId).
+  sumo:fetch(lsl_players, PlayerId).

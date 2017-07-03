@@ -7,7 +7,7 @@
 -type authorization_mechanism() :: none | player | session.
 -export_type([authorization_mechanism/0]).
 
--type state() :: #{player => undefined | lsl_players:player()}.
+-type state() :: sr_state:state().
 -export_type([state/0]).
 
 -spec is_authorized(
@@ -40,7 +40,7 @@ is_authorized([session|Rest], DefaultMech, Req, State) ->
 is_authorized(notfound, Rest, DefaultMech, Req, State) ->
   is_authorized(Rest, DefaultMech, Req, State);
 is_authorized(Player, _Rest, _DefaultMech, Req, State) ->
-  {true, Req, State#{player => Player}}.
+  {true, Req, sr_state:set(player, Player, State)}.
 
 credentials(Req) ->
   case cowboy_req:parse_header(<<"authorization">>, Req) of
