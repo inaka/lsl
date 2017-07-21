@@ -62,7 +62,7 @@ is_authorized(Req, State) ->
     {halt | {boolean(), binary()}, cowboy_req:req(), state()}.
 handle_post(Req, State) ->
   try
-    #{player := Player} = State,
+    Player = sr_state:retrieve(player, State, undefined),
     PlayerId = lsl_players:id(Player),
     {ok, Body, Req1} = cowboy_req:body(Req),
     Match =
@@ -85,7 +85,7 @@ handle_post(Req, State) ->
 -spec handle_get(cowboy_req:req(), state()) ->
     {iodata(), cowboy_req:req(), state()}.
 handle_get(Req, State) ->
-  #{player := Player} = State,
+  Player = sr_state:retrieve(player, State, undefined),
   try
     {QsStatus, Req1} = cowboy_req:qs_val(<<"status">>, Req, <<"all">>),
     Status = parse_qs(QsStatus),

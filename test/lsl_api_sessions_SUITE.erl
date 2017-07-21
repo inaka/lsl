@@ -96,7 +96,7 @@ post_sessions_ok(Config) ->
   {player1, Player1} = lists:keyfind(player1, 1, Config),
   Name = binary_to_list(lsl_players:name(Player1)),
   Headers = #{ basic_auth => {Name, "pwd"}
-             , <<"content-type">> => <<"application/json; charset=utf8">>
+             , <<"content-type">> => <<"application/json">>
              },
 
   ct:comment("Create the session"),

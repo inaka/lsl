@@ -16,8 +16,8 @@
 
 -export([new/2]).
 -export([sumo_schema/0, sumo_wakeup/1, sumo_sleep/1]).
--export([to_json/1, from_json/1, update/2, uri_path/1, id/1]).
--export([name/1, password_hash/1]).
+-export([to_json/1, from_json/1, update/2, location/2, uri_path/1, id/1]).
+-export([name/1, password_hash/1, duplication_conditions/1]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% BEHAVIOUR CALLBACKS
@@ -34,14 +34,14 @@ sumo_schema() ->
     ]).
 
 %% @private
--spec sumo_sleep(player()) -> sumo:doc().
+-spec sumo_sleep(player()) -> sumo:model().
 sumo_sleep(Player) -> Player.
 
 %% @private
--spec sumo_wakeup(sumo:doc()) -> player().
+-spec sumo_wakeup(sumo:model()) -> player().
 sumo_wakeup(Doc) -> Doc.
 
--spec to_json(player()) -> sumo_rest_doc:json().
+-spec to_json(player()) -> #{atom() => binary()}.
 to_json(Player) ->
   maps:remove(password_hash, Player).
 
@@ -61,11 +61,18 @@ from_json(Json) ->
   {ok, player()} | {error, sumo_rest_doc:reason()}.
 update(Player, _Json) -> {ok, Player}.
 
+-spec location(player(), sumo_rest_doc:json()) -> binary().
+location(#{id := Id}, Path) -> iolist_to_binary([Path, "/", Id]).
+
 -spec uri_path(player()) -> iodata().
 uri_path(#{id := Id}) -> <<$/, Id/binary>>.
 
 -spec id(player()) -> binary().
 id(#{id := Id}) -> Id.
+
+-spec duplication_conditions(player()) ->
+  sumo_rest_doc:duplication_conditions().
+duplication_conditions(#{name := Name}) -> {name, Name}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PUBLIC API

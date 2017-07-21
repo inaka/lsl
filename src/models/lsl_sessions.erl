@@ -6,7 +6,7 @@
 -behaviour(sumo_rest_doc).
 
 -opaque session() ::
-  #{ token => binary()
+  #{ token => binary() | undefined
    , secret => undefined | binary()
    , player_id => binary()
    , created_at => dcn_datetime:datetime()
@@ -15,7 +15,7 @@
 
 -export([new/1]).
 -export([sumo_schema/0, sumo_wakeup/1, sumo_sleep/1]).
--export([to_json/1, from_json/1, update/2, uri_path/1]).
+-export([to_json/1, from_json/1, update/2, location/2, uri_path/1]).
 -export([token/1, secret/1, player_id/1]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -32,15 +32,15 @@ sumo_schema() ->
     ]).
 
 %% @private
--spec sumo_sleep(session()) -> sumo:doc().
+-spec sumo_sleep(session()) -> sumo:model().
 sumo_sleep(Session) -> Session.
 
 %% @private
--spec sumo_wakeup(sumo:doc()) -> session().
+-spec sumo_wakeup(sumo:model()) -> session().
 sumo_wakeup(Doc) -> Doc.
 
 %% @private
--spec to_json(session()) -> map().
+-spec to_json(session()) -> session().
 to_json(Session) -> Session.
 
 -spec from_json(sumo_rest_doc:json()) -> no_return().
@@ -48,6 +48,9 @@ from_json(_Json) -> throw(no_simple_parsing).
 
 -spec update(session(), sumo_rest_doc:json()) -> no_return().
 update(_Session, _Changes) -> throw(no_simple_parsing).
+
+-spec location(session(), sumo_rest_doc:json()) -> binary().
+location(#{player_id := Id}, Path) -> iolist_to_binary([Path, "/", Id]).
 
 -spec uri_path(session()) -> iodata().
 uri_path(#{token := Token}) -> <<$/, Token/binary>>.

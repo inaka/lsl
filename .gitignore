@@ -16,3 +16,4 @@ examples/blog/log
 log*/
 erl_crash.dump
 .erlang.mk.*
+_build/

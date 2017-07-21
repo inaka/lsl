@@ -34,7 +34,6 @@ trails() ->
     #{ post =>
        #{ tags => ["sessions"]
         , description => "Creates a new session"
-        , consumes => [""]
         , produces => ["application/json"]
         , parameters => [RequestBody]
         }
@@ -54,6 +53,6 @@ is_authorized(Req, State) ->
 -spec handle_post(cowboy_req:req(), state()) ->
     {halt | {boolean(), binary()}, cowboy_req:req(), state()}.
 handle_post(Req, State) ->
-  #{player := PlayerId} = State,
-  Session = lsl_sessions:new(PlayerId),
+  Player = sr_state:retrieve(player, State, undefined),
+  Session = lsl_sessions:new(lsl_players:id(Player)),
   sr_entities_handler:handle_post(Session, Req, State).

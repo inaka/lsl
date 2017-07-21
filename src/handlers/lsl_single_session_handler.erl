@@ -54,6 +54,7 @@ is_authorized(Req, State) ->
 -spec forbidden(cowboy_req:req(), state()) ->
   {boolean() | halt, cowboy_req:req(), state()}.
 forbidden(Req, State) ->
-  #{player := Player, id := Token} = State,
+  Token = sr_state:id(State),
+  Player = sr_state:retrieve(player, State, undefined),
   PlayerId = lsl_players:id(Player),
   {not lsl_sessions_repo:can_close(PlayerId, Token), Req, State}.

@@ -70,8 +70,7 @@ undo(Match = #{history := [Row|History]}) ->
   RowNum = length(Row),
   {Up, _, Down} = split_board_at(RowNum, Board),
   NewBoard = Up ++ [Row|Down],
-  Match#{board := NewBoard, history := History};
-undo(_Match) -> throw(no_history).
+  Match#{board := NewBoard, history := History}.
 
 %% @doc Returns the last cross result.
 %%      In other words, the status of the match

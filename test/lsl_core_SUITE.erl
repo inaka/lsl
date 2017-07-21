@@ -9,7 +9,6 @@
         , cant_cross_crossed/1
         , with_just_one_left_won/1
         , with_no_sticks_left_lost/1
-        , no_undo/1
         , undo/1
         , pretty_print/1
         ]).
@@ -167,20 +166,6 @@ with_no_sticks_left_lost(_Config) ->
 
   ct:comment("Player crosses the whole second row and loses"),
   {lost, _} = lsl_core:cross(2, 1, 2, Match),
-  {comment, ""}.
-
--spec no_undo(lsl_test_utils:config()) -> {comment, []}.
-no_undo(_Config) ->
-  ct:comment("A new match is created"),
-  Match = lsl_core:new(2),
-
-  ct:comment("No undo is possible"),
-  try lsl_core:undo(Match) of
-    BadMatch -> ct:fail("Unexpected match: ~p", [BadMatch])
-  catch
-    _:no_history -> ok
-  end,
-
   {comment, ""}.
 
 -spec undo(lsl_test_utils:config()) -> {comment, []}.
